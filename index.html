@@ -84,26 +84,29 @@
 
     <!-- Home Menu Layer -->
     <div id="home-menu" class="absolute inset-0 w-full h-full z-50 flex items-center justify-center bg-black/50 backdrop-blur-md transition-opacity duration-700 p-1 md:p-2">
-        <!-- Di HP dipaksa Statis & Anti-Scroll (h-[96vh] overflow-hidden), Tab/PC tetap dinamis -->
-        <div class="glass-panel p-2 md:p-12 rounded-lg md:rounded-2xl flex flex-col items-center text-center max-w-md w-[95vw] md:w-[90vw] relative h-[96vh] md:h-auto md:max-h-[95vh] overflow-hidden md:overflow-y-auto md:custom-scroll">
+        <!-- Di HP dipaksa Statis & Stretch 96% Layar (h-[96vh] w-[96vw]), Tab/PC tetap dinamis -->
+        <div class="glass-panel p-2 md:p-12 rounded-lg md:rounded-2xl flex flex-col items-center justify-between md:justify-center text-center w-[96vw] md:max-w-md md:w-[90vw] relative h-[96vh] md:h-auto md:max-h-[95vh] overflow-hidden md:overflow-y-auto md:custom-scroll">
             
             <!-- Menu Utama -->
-            <div id="view-main" class="w-full flex flex-col items-center transition-all duration-300 my-auto">
-                <h1 class="text-lg md:text-5xl font-black text-white tracking-widest uppercase mb-1 md:mb-3 animate-title leading-tight">
-                    Nihongo<br>Explorer <span class="text-gray-400">3D</span>
-                </h1>
-                <p class="text-[7px] md:text-sm text-gray-300 mb-2 md:mb-8 font-medium tracking-wide leading-tight">
-                    Jelajahi, temukan, dan kuasai kosakata Bahasa Jepang secara spasial.
-                </p>
+            <div id="view-main" class="w-full h-full flex flex-col items-center justify-center transition-all duration-300">
+                <div class="my-auto">
+                    <h1 class="text-xl md:text-5xl font-black text-white tracking-widest uppercase mb-1 md:mb-3 animate-title leading-tight">
+                        Nihongo<br>Explorer <span class="text-gray-400">3D</span>
+                    </h1>
+                    <p class="text-[7px] md:text-sm text-gray-300 mb-1 md:mb-8 font-medium tracking-wide leading-tight">
+                        Jelajahi, temukan, dan kuasai kosakata Bahasa Jepang secara spasial.
+                    </p>
+                </div>
                 
-                <div class="w-full flex flex-col gap-1 md:gap-3">
-                    <button onclick="startGame()" class="w-full bg-white hover:bg-gray-200 text-black py-1.5 md:py-4 rounded-md md:rounded-xl text-[8px] md:text-sm font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-widest">
+                <!-- Di HP tombol horizontal berjejer 3, di PC vertikal bertumpuk -->
+                <div class="w-full flex flex-row md:flex-col gap-1 md:gap-3 mt-auto md:mt-0 shrink-0">
+                    <button onclick="startGame()" class="flex-1 bg-white hover:bg-gray-200 text-black py-2 md:py-4 rounded-md md:rounded-xl text-[7px] md:text-sm font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-widest leading-none md:leading-normal">
                         MULAI EKSPLORASI
                     </button>
-                    <button onclick="switchHomeView('view-kontrol')" class="w-full bg-white/10 hover:bg-white/20 text-white py-1 md:py-3 rounded-md md:rounded-xl text-[7px] md:text-xs font-bold transition-all border border-white/20 tracking-wider">
+                    <button onclick="switchHomeView('view-kontrol')" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 md:py-3 rounded-md md:rounded-xl text-[6px] md:text-xs font-bold transition-all border border-white/20 tracking-wider leading-none md:leading-normal">
                         KONTROL PERANGKAT
                     </button>
-                    <button onclick="switchHomeView('view-info')" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-1 md:py-3 rounded-md md:rounded-xl text-[7px] md:text-xs font-bold transition-all border border-white/10 tracking-wider">
+                    <button onclick="switchHomeView('view-info')" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2 md:py-3 rounded-md md:rounded-xl text-[6px] md:text-xs font-bold transition-all border border-white/10 tracking-wider leading-none md:leading-normal">
                         INFORMASI
                     </button>
                 </div>
@@ -111,58 +114,58 @@
 
             <!-- Kontrol View -->
             <div id="view-kontrol" class="w-full flex flex-col items-center hidden transition-all duration-300 h-full justify-center">
-                <h2 class="text-sm md:text-2xl font-bold text-white mb-1.5 md:mb-6 uppercase tracking-wider">Kontrol Game</h2>
-                <div class="w-full space-y-1 md:space-y-4 text-left mb-2 md:mb-8">
-                    <div class="bg-white/5 p-1.5 md:p-4 rounded-md md:rounded-lg border border-white/10">
-                        <h3 class="text-[8px] md:text-sm font-bold text-white mb-0.5 md:mb-2 flex items-center gap-1 md:gap-2">💻 PC / Desktop</h3>
+                <h2 class="text-[10px] md:text-2xl font-bold text-white mb-1.5 md:mb-6 uppercase tracking-wider">Kontrol Game</h2>
+                <div class="w-full flex flex-row md:flex-col gap-1.5 md:gap-4 text-left mb-2 md:mb-8 h-full md:h-auto items-center">
+                    <div class="flex-1 bg-white/5 p-1.5 md:p-4 rounded-md md:rounded-lg border border-white/10 h-full md:h-auto flex flex-col justify-center">
+                        <h3 class="text-[7px] md:text-sm font-bold text-white mb-1 md:mb-2 flex items-center gap-1 md:gap-2">💻 PC / Desktop</h3>
                         <p class="text-[6px] md:text-xs text-gray-300"><span class="font-bold text-white bg-white/10 px-1 rounded">W A S D</span> / <span class="font-bold text-white bg-white/10 px-1 rounded">Panah</span> : Bergerak</p>
-                        <p class="text-[6px] md:text-xs text-gray-300 mt-0.5 md:mt-1"><span class="font-bold text-white bg-white/10 px-1 rounded">Mouse Drag</span> : Melihat sekeliling</p>
+                        <p class="text-[6px] md:text-xs text-gray-300 mt-1 md:mt-1"><span class="font-bold text-white bg-white/10 px-1 rounded">Mouse Drag</span> : Melihat sekeliling</p>
                     </div>
-                    <div class="bg-white/5 p-1.5 md:p-4 rounded-md md:rounded-lg border border-white/10">
-                        <h3 class="text-[8px] md:text-sm font-bold text-white mb-0.5 md:mb-2 flex items-center gap-1 md:gap-2">📱 HP / Tablet</h3>
+                    <div class="flex-1 bg-white/5 p-1.5 md:p-4 rounded-md md:rounded-lg border border-white/10 h-full md:h-auto flex flex-col justify-center">
+                        <h3 class="text-[7px] md:text-sm font-bold text-white mb-1 md:mb-2 flex items-center gap-1 md:gap-2">📱 HP / Tablet</h3>
                         <p class="text-[6px] md:text-xs text-gray-300"><span class="font-bold text-white">Usap Kiri</span> : Memunculkan Joystick / Bergerak</p>
-                        <p class="text-[6px] md:text-xs text-gray-300 mt-0.5 md:mt-1"><span class="font-bold text-white">Usap Kanan</span> : Melihat sekeliling</p>
+                        <p class="text-[6px] md:text-xs text-gray-300 mt-1 md:mt-1"><span class="font-bold text-white">Usap Kanan</span> : Melihat sekeliling</p>
                     </div>
                 </div>
-                <button onclick="switchHomeView('view-main')" class="w-full mt-auto md:mt-0 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[7px] md:text-xs font-bold transition-all tracking-wider">
+                <button onclick="switchHomeView('view-main')" class="w-full mt-auto md:mt-0 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[6px] md:text-xs font-bold transition-all tracking-wider shrink-0">
                     KEMBALI
                 </button>
             </div>
 
             <!-- Info View -->
-            <div id="view-info" class="w-full flex flex-col items-center hidden transition-all duration-300 h-full justify-center">
-                <div class="w-full bg-white/5 p-2 md:p-8 rounded-md md:rounded-xl border border-white/10 text-center mb-1.5 md:mb-6 shadow-lg">
+            <div id="view-info" class="w-full flex flex-col items-center hidden transition-all duration-300 h-full justify-between">
+                <div class="w-full flex-1 flex flex-col justify-center bg-white/5 p-2 md:p-8 rounded-md md:rounded-xl border border-white/10 text-center mb-1.5 md:mb-6 shadow-lg">
                     <!-- Header & Subheader -->
-                    <h2 class="text-[11px] md:text-3xl font-black text-white tracking-widest uppercase mb-0.5 md:mb-1">
+                    <h2 class="text-[9px] md:text-3xl font-black text-white tracking-widest uppercase mb-0.5 md:mb-1">
                         Nihongo Explorer <span class="text-gray-400">3D</span>
                     </h2>
-                    <p class="text-[6px] md:text-xs text-gray-300 font-bold tracking-widest uppercase mb-1 md:mb-4">
+                    <p class="text-[5px] md:text-xs text-gray-300 font-bold tracking-widest uppercase mb-1 md:mb-4">
                         Spatial Learning Simulator
                     </p>
                     
                     <!-- Description -->
-                    <p class="text-[6px] md:text-xs text-gray-400 leading-tight md:leading-relaxed mb-1.5 md:mb-6 font-medium px-1">
+                    <p class="text-[5px] md:text-xs text-gray-400 leading-tight md:leading-relaxed mb-1.5 md:mb-6 font-medium px-1">
                         Game simulasi interaktif yang dirancang untuk mempercepat retensi memori spasial dan penguasaan kosakata bahasa Jepang dasar melalui observasi lingkungan sekitar secara terstruktur.
                     </p>
                     
-                    <!-- CTA Buttons -->
-                    <div class="flex flex-col gap-1 md:gap-3 mb-1.5 md:mb-6">
-                        <a href="https://japanese-language-community.lovable.app" target="_blank" rel="noopener noreferrer" class="w-full bg-white text-black py-1.5 md:py-2.5 rounded-sm md:rounded-lg text-[7px] md:text-xs font-bold hover:bg-gray-200 transition-all shadow-[0_0_10px_rgba(255,255,255,0.2)] tracking-wide block text-center">
+                    <!-- CTA Buttons (Horizontal on Mobile) -->
+                    <div class="flex flex-row md:flex-col gap-1 md:gap-3 mb-1.5 md:mb-6">
+                        <a href="https://japanese-language-community.lovable.app" target="_blank" rel="noopener noreferrer" class="flex-1 bg-white text-black py-1.5 md:py-2.5 rounded-sm md:rounded-lg text-[6px] md:text-xs font-bold hover:bg-gray-200 transition-all shadow-[0_0_10px_rgba(255,255,255,0.2)] tracking-wide flex items-center justify-center">
                             KUNJUNGI JLC
                         </a>
-                        <a href="https://saweria.co/yourjlc" target="_blank" rel="noopener noreferrer" class="w-full bg-white/10 text-white border border-white/20 py-1.5 md:py-2.5 rounded-sm md:rounded-lg text-[7px] md:text-xs font-bold hover:bg-white/20 transition-all tracking-wide block text-center">
-                            DUKUNG PENGEMBANGAN GAME
+                        <a href="https://saweria.co/yourjlc" target="_blank" rel="noopener noreferrer" class="flex-1 bg-white/10 text-white border border-white/20 py-1.5 md:py-2.5 rounded-sm md:rounded-lg text-[6px] md:text-xs font-bold hover:bg-white/20 transition-all tracking-wide flex items-center justify-center">
+                            DUKUNG KAMI
                         </a>
                     </div>
 
                     <!-- Footer License -->
-                    <div class="pt-1.5 md:pt-4 border-t border-white/10">
-                        <p class="text-[5px] md:text-[10px] text-gray-500 uppercase tracking-widest">Dikembangkan Oleh</p>
-                        <p class="text-[7px] md:text-xs text-white font-bold tracking-wider mt-0.5 md:mt-1">Japanese Language Community</p>
+                    <div class="pt-1 md:pt-4 border-t border-white/10 mt-auto md:mt-0">
+                        <p class="text-[4px] md:text-[10px] text-gray-500 uppercase tracking-widest">Dikembangkan Oleh</p>
+                        <p class="text-[6px] md:text-xs text-white font-bold tracking-wider mt-0.5 md:mt-1">Japanese Language Community</p>
                     </div>
                 </div>
                 
-                <button onclick="switchHomeView('view-main')" class="w-full mt-auto md:mt-0 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[7px] md:text-xs font-bold transition-all tracking-wider">
+                <button onclick="switchHomeView('view-main')" class="w-full shrink-0 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[6px] md:text-xs font-bold transition-all tracking-wider">
                     KEMBALI
                 </button>
             </div>
@@ -1227,114 +1230,108 @@ function openDictionaryModal(key) {
     const data = objData[key];
     const modalContainer = document.getElementById('modal-container');
     
-    // Tampilan Anti-Scroll Statis: h-[96vh] & overflow-hidden pada HP
+    // Tampilan Anti-Scroll Statis 96% layar HP. Fon super dikecilkan.
     const html = `
-        <div class="glass-panel w-[98vw] md:w-[550px] rounded-lg md:rounded-2xl p-1.5 md:p-6 relative flex flex-row md:flex-col gap-1.5 md:gap-5 transform scale-95 transition-transform duration-300 h-[96vh] md:h-auto md:max-h-[90vh] overflow-hidden md:overflow-y-auto md:custom-scroll shadow-2xl" id="modal-content">
+        <div class="glass-panel w-[96vw] md:w-[550px] rounded-lg md:rounded-2xl p-1.5 md:p-6 relative flex flex-col transform scale-95 transition-transform duration-300 h-[96vh] md:h-auto md:max-h-[90vh] overflow-hidden md:overflow-y-auto md:custom-scroll shadow-2xl" id="modal-content">
             
-            <button onclick="closeModal()" class="absolute top-0 right-0 p-1.5 md:top-3 md:right-3 text-white/50 hover:text-white text-base md:text-3xl leading-none z-10">&times;</button>
+            <button onclick="closeModal()" class="absolute top-0 right-0 p-1 md:top-3 md:right-3 text-white/50 hover:text-white text-base md:text-3xl leading-none z-10">&times;</button>
             
-            <!-- Wrapper Flex untuk Kolom Kiri & Kanan -->
-            <div class="flex flex-row md:flex-col gap-1.5 md:gap-5 h-full md:h-auto overflow-hidden">
+            <!-- Wrapper Flex untuk Kolom Kiri & Kanan (Mengisi Ruang Tersisa) -->
+            <div class="flex flex-row md:flex-col gap-1.5 md:gap-5 flex-1 overflow-hidden">
                 
                 <!-- Info Utama (Kiri di Mobile, Atas di Desktop) -->
-                <div class="w-[30%] md:w-full flex flex-col justify-between md:justify-center items-center text-center border-r md:border-r-0 md:border-b border-white/10 pr-1.5 md:pr-0 pb-1 md:pb-4 shrink-0 h-full md:h-auto">
-                    <div class="my-auto md:my-0 flex flex-col items-center">
-                        <p class="text-[6px] md:text-sm text-gray-400 mb-0.5">${data.furigana} • ${data.romaji}</p>
-                        <h2 class="text-xl md:text-4xl font-bold mb-0.5 md:mb-1.5 flex items-center justify-center gap-1 md:gap-2 text-white leading-none">
-                            ${data.kanji}
-                            <button onclick="speakText('${data.kanji}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white" title="Dengarkan pengucapan">
-                                ${getAudioIcon('w-3 h-3 md:w-7 md:h-7')}
-                            </button>
-                        </h2>
-                        <p class="text-[7px] md:text-base text-gray-300 font-medium md:mb-2">${data.arti}</p>
-                    </div>
-                    <!-- Tombol Kuis Paling Bawah (Masuk ke kolom kiri pada HP agar hemat ruang vertikal) -->
-                    <button onclick="openQuizModal('${key}', 0)" class="w-full bg-white hover:bg-gray-200 text-black py-1 md:py-3.5 rounded-md md:rounded-lg text-[7px] md:text-base font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-wide mt-auto md:mt-4">
-                        MULAI KUIS
-                    </button>
+                <div class="w-[30%] md:w-full flex flex-col justify-center items-center text-center border-r md:border-r-0 md:border-b border-white/10 pr-1.5 md:pr-0 pb-0 md:pb-4 shrink-0 h-full md:h-auto">
+                    <p class="text-[5px] md:text-sm text-gray-400 mb-0.5">${data.furigana} • ${data.romaji}</p>
+                    <h2 class="text-lg md:text-4xl font-bold mb-0.5 md:mb-1.5 flex items-center justify-center gap-1 md:gap-2 text-white leading-none">
+                        ${data.kanji}
+                        <button onclick="speakText('${data.kanji}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white" title="Dengarkan pengucapan">
+                            ${getAudioIcon('w-3 h-3 md:w-7 md:h-7')}
+                        </button>
+                    </h2>
+                    <p class="text-[6px] md:text-base text-gray-300 font-medium">${data.arti}</p>
                 </div>
 
                 <!-- Konteks Percakapan (Kanan di Mobile, Bawah di Desktop) -->
-                <div class="w-[70%] md:w-full flex flex-col gap-1 md:gap-4 justify-between md:justify-center h-full md:h-auto">
+                <div class="w-[70%] md:w-full flex flex-col gap-1 md:gap-4 justify-center h-full md:h-auto">
                     
                     <!-- Contoh Kalimat -->
-                    <div class="bg-white/5 p-1 md:p-4 rounded-md md:rounded-lg border border-white/10 flex-1 flex flex-col justify-center">
+                    <div class="bg-white/5 p-1 md:p-4 rounded-md md:rounded-lg border border-white/10 flex-1 flex flex-col justify-center overflow-hidden">
                         <div class="flex justify-between items-start md:items-center mb-0.5 md:mb-2 flex-col md:flex-row gap-0.5 md:gap-0">
-                            <h3 class="text-[6px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Kalimat</h3>
+                            <h3 class="text-[5px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Kalimat</h3>
                             <div class="flex flex-wrap gap-0.5 md:gap-1">
-                                <button onclick="toggleVisibility('kalimat-kana')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
-                                <button onclick="toggleVisibility('kalimat-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
-                                <button onclick="toggleVisibility('kalimat-arti')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
+                                <button onclick="toggleVisibility('kalimat-kana')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
+                                <button onclick="toggleVisibility('kalimat-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
+                                <button onclick="toggleVisibility('kalimat-arti')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
                             </div>
                         </div>
                         
                         <div class="flex items-start gap-1 md:gap-2">
-                            <p class="text-[8px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.contoh.jp}</p>
+                            <p class="text-[7px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100 line-clamp-2 md:line-clamp-none">${data.contoh.jp}</p>
                             <button onclick="speakText('${data.contoh.jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
-                                ${getAudioIcon('w-2.5 h-2.5 md:w-5 md:h-5')}
+                                ${getAudioIcon('w-2 h-2 md:w-5 md:h-5')}
                             </button>
                         </div>
                         
                         <div id="kalimat-kana" class="hidden mt-0.5 md:mt-2 pt-0.5 md:pt-1.5 border-t border-white/10">
-                            <p class="text-[7px] md:text-sm text-gray-300 font-medium">${data.contoh.kana}</p>
+                            <p class="text-[6px] md:text-sm text-gray-300 font-medium">${data.contoh.kana}</p>
                         </div>
                         <div id="kalimat-romaji" class="hidden mt-0.5 md:mt-1.5 pt-0.5 md:pt-1.5 border-t border-white/10">
-                            <p class="text-[6px] md:text-sm text-gray-400 italic">${data.contoh.romaji}</p>
+                            <p class="text-[5px] md:text-sm text-gray-400 italic">${data.contoh.romaji}</p>
                         </div>
                         <div id="kalimat-arti" class="hidden mt-0.5 md:mt-1.5 pt-0.5 md:pt-1.5 border-t border-white/10">
-                            <p class="text-[6px] md:text-sm text-gray-200 font-medium">${data.contoh.id}</p>
+                            <p class="text-[5px] md:text-sm text-gray-200 font-medium">${data.contoh.id}</p>
                         </div>
                     </div>
 
                     <!-- Kaiwa -->
-                    <div class="bg-white/5 p-1 md:p-4 rounded-md md:rounded-lg border border-white/10 flex-1 flex flex-col justify-center">
+                    <div class="bg-white/5 p-1 md:p-4 rounded-md md:rounded-lg border border-white/10 flex-1 flex flex-col justify-center overflow-hidden">
                         <div class="flex justify-between items-start md:items-center mb-0.5 md:mb-3 flex-col md:flex-row gap-0.5 md:gap-0">
-                            <h3 class="text-[6px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Percakapan</h3>
+                            <h3 class="text-[5px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Percakapan</h3>
                             <div class="flex flex-wrap gap-0.5 md:gap-1">
-                                <button onclick="toggleGroup('kaiwa-kana')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
-                                <button onclick="toggleGroup('kaiwa-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
-                                <button onclick="toggleGroup('kaiwa-arti')" class="flex items-center gap-0.5 md:gap-1 text-[5px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
+                                <button onclick="toggleGroup('kaiwa-kana')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
+                                <button onclick="toggleGroup('kaiwa-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
+                                <button onclick="toggleGroup('kaiwa-arti')" class="flex items-center gap-0.5 md:gap-1 text-[4px] md:text-xs bg-white/5 hover:bg-white/20 px-1 md:px-2 py-0.5 md:py-1 rounded-sm md:rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
                             </div>
                         </div>
                         
                         <div class="flex flex-col gap-1 md:gap-4">
                             <div class="flex gap-1 md:gap-2.5">
-                                <div class="w-2.5 h-2.5 md:w-6 md:h-6 rounded-full bg-white flex items-center justify-center text-[5px] md:text-xs shrink-0 mt-0.5 font-bold text-black leading-none">A</div>
+                                <div class="w-2.5 h-2.5 md:w-6 md:h-6 rounded-full bg-white flex items-center justify-center text-[4px] md:text-xs shrink-0 mt-0.5 font-bold text-black leading-none">A</div>
                                 <div class="flex-1">
                                     <div class="flex items-start gap-1 md:gap-2">
-                                        <p class="text-[8px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.kaiwa.a_jp}</p>
+                                        <p class="text-[7px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100 line-clamp-2 md:line-clamp-none">${data.kaiwa.a_jp}</p>
                                         <button onclick="speakText('${data.kaiwa.a_jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
-                                            ${getAudioIcon('w-2.5 h-2.5 md:w-5 md:h-5')}
+                                            ${getAudioIcon('w-2 h-2 md:w-5 md:h-5')}
                                         </button>
                                     </div>
                                     <div class="kaiwa-kana hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[7px] md:text-sm text-gray-300 font-medium">${data.kaiwa.a_kana}</p>
+                                        <p class="text-[6px] md:text-sm text-gray-300 font-medium">${data.kaiwa.a_kana}</p>
                                     </div>
                                     <div class="kaiwa-romaji hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[6px] md:text-sm text-gray-400 italic">${data.kaiwa.a_romaji}</p>
+                                        <p class="text-[5px] md:text-sm text-gray-400 italic">${data.kaiwa.a_romaji}</p>
                                     </div>
                                     <div class="kaiwa-arti hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[6px] md:text-sm text-gray-200 font-medium">${data.kaiwa.a_id}</p>
+                                        <p class="text-[5px] md:text-sm text-gray-200 font-medium">${data.kaiwa.a_id}</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex gap-1 md:gap-2.5">
-                                <div class="w-2.5 h-2.5 md:w-6 md:h-6 rounded-full bg-white/20 border border-white/50 flex items-center justify-center text-[5px] md:text-xs shrink-0 mt-0.5 font-bold text-white leading-none">B</div>
+                                <div class="w-2.5 h-2.5 md:w-6 md:h-6 rounded-full bg-white/20 border border-white/50 flex items-center justify-center text-[4px] md:text-xs shrink-0 mt-0.5 font-bold text-white leading-none">B</div>
                                 <div class="flex-1">
                                     <div class="flex items-start gap-1 md:gap-2">
-                                        <p class="text-[8px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.kaiwa.b_jp}</p>
+                                        <p class="text-[7px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100 line-clamp-2 md:line-clamp-none">${data.kaiwa.b_jp}</p>
                                         <button onclick="speakText('${data.kaiwa.b_jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
-                                            ${getAudioIcon('w-2.5 h-2.5 md:w-5 md:h-5')}
+                                            ${getAudioIcon('w-2 h-2 md:w-5 md:h-5')}
                                         </button>
                                     </div>
                                     <div class="kaiwa-kana hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[7px] md:text-sm text-gray-300 font-medium">${data.kaiwa.b_kana}</p>
+                                        <p class="text-[6px] md:text-sm text-gray-300 font-medium">${data.kaiwa.b_kana}</p>
                                     </div>
                                     <div class="kaiwa-romaji hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[6px] md:text-sm text-gray-400 italic">${data.kaiwa.b_romaji}</p>
+                                        <p class="text-[5px] md:text-sm text-gray-400 italic">${data.kaiwa.b_romaji}</p>
                                     </div>
                                     <div class="kaiwa-arti hidden mt-0.5 md:mt-1.5">
-                                        <p class="text-[6px] md:text-sm text-gray-200 font-medium">${data.kaiwa.b_id}</p>
+                                        <p class="text-[5px] md:text-sm text-gray-200 font-medium">${data.kaiwa.b_id}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1342,6 +1339,13 @@ function openDictionaryModal(key) {
                     </div>
 
                 </div>
+            </div>
+
+            <!-- Tombol Kuis dipindah ke Paling Bawah, melintang 100% diluar kolom Kiri/Kanan -->
+            <div class="w-full mt-1 md:mt-4 shrink-0 pt-1 md:pt-0 border-t border-white/10 md:border-0">
+                <button onclick="openQuizModal('${key}', 0)" class="w-full bg-white hover:bg-gray-200 text-black py-1 md:py-3.5 rounded-sm md:rounded-lg text-[7px] md:text-base font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-widest uppercase">
+                    MULAI KUIS
+                </button>
             </div>
             
         </div>
@@ -1370,7 +1374,7 @@ function openQuizModal(key, quizIndex) {
     let optionsHtml = '';
     quiz.opsi.forEach((opt, idx) => {
         optionsHtml += `
-            <button onclick="checkAnswer('${key}', ${quizIndex}, ${idx}, ${quiz.jawaban})" id="opt-${idx}" class="w-full text-left bg-white/5 hover:bg-white/20 border border-white/20 px-2 py-1 md:px-5 md:py-3.5 rounded-md md:rounded-lg transition-all font-medium text-[7px] md:text-base text-gray-200">
+            <button onclick="checkAnswer('${key}', ${quizIndex}, ${idx}, ${quiz.jawaban})" id="opt-${idx}" class="w-full text-left bg-white/5 hover:bg-white/20 border border-white/20 px-1.5 py-1 md:px-5 md:py-3.5 rounded-sm md:rounded-lg transition-all font-medium text-[6px] md:text-base text-gray-200 leading-tight md:leading-normal">
                 ${['A', 'B', 'C', 'D'][idx]}. ${opt}
             </button>
         `;
@@ -1378,16 +1382,16 @@ function openQuizModal(key, quizIndex) {
 
     const isLast = quizIndex === data.kuis.length - 1;
 
-    // Statis & Anti-Scroll di HP
+    // Statis & Stretch 96% di HP
     const html = `
-        <div class="glass-panel w-[94vw] md:w-[500px] rounded-lg md:rounded-2xl p-2 md:p-6 relative flex flex-row md:flex-col gap-2 md:gap-6 shadow-2xl h-[96vh] md:h-auto md:max-h-auto overflow-hidden" id="modal-content">
+        <div class="glass-panel w-[96vw] md:w-[500px] rounded-lg md:rounded-2xl p-1.5 md:p-6 relative flex flex-row md:flex-col gap-1.5 md:gap-6 shadow-2xl h-[96vh] md:h-auto md:max-h-auto overflow-hidden" id="modal-content">
             <button onclick="closeModal()" class="absolute top-0 right-0 p-1.5 md:top-4 md:right-4 text-white/50 hover:text-white text-base md:text-2xl leading-none z-10">&times;</button>
             
             <!-- Pertanyaan Kuis (Kiri / Atas) -->
-            <div class="w-[40%] md:w-full flex flex-col justify-center border-r md:border-r-0 md:border-b border-white/10 pr-2 md:pr-0 pb-1 md:pb-4 shrink-0 h-full md:h-auto">
-                <span class="text-[6px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 bg-white/20 rounded text-white self-start">Kuis ${quizIndex + 1}/3</span>
-                <p class="text-[6px] md:text-sm text-gray-400 mt-1 md:mt-3 uppercase tracking-wider font-semibold">${quiz.instruksi}</p>
-                <h3 class="text-[9px] md:text-2xl font-bold mt-1 md:mt-2 leading-tight flex items-start gap-1 md:gap-2 text-white">
+            <div class="w-[40%] md:w-full flex flex-col justify-center border-r md:border-r-0 md:border-b border-white/10 pr-1.5 md:pr-0 pb-1 md:pb-4 shrink-0 h-full md:h-auto">
+                <span class="text-[5px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 bg-white/20 rounded text-white self-start">Kuis ${quizIndex + 1}/3</span>
+                <p class="text-[5px] md:text-sm text-gray-400 mt-1 md:mt-3 uppercase tracking-wider font-semibold">${quiz.instruksi}</p>
+                <h3 class="text-[8px] md:text-2xl font-bold mt-1 md:mt-2 leading-tight flex items-start gap-1 md:gap-2 text-white">
                     ${quiz.soal}
                     <button onclick="speakText('${textToSpeak}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0 mt-0.5" title="Dengarkan">
                         ${getAudioIcon('w-2.5 h-2.5 md:w-6 md:h-6')}
@@ -1401,13 +1405,13 @@ function openQuizModal(key, quizIndex) {
                     ${optionsHtml}
                 </div>
 
-                <div id="quiz-feedback" class="hidden rounded-md md:rounded-lg p-1 md:p-3 text-center font-bold text-[7px] md:text-sm"></div>
+                <div id="quiz-feedback" class="hidden rounded-sm md:rounded-lg p-1 md:p-3 text-center font-bold text-[6px] md:text-sm"></div>
 
-                <div class="justify-between items-center mt-auto border-t border-white/10 pt-1 md:pt-4 hidden" id="quiz-actions">
-                    <button onclick="openDictionaryModal('${key}')" class="text-[6px] md:text-sm text-gray-400 hover:text-white transition-all">Ke Kamus</button>
+                <div class="justify-between items-center mt-auto md:mt-auto border-t border-white/10 pt-1 md:pt-4 hidden" id="quiz-actions">
+                    <button onclick="openDictionaryModal('${key}')" class="text-[5px] md:text-sm text-gray-400 hover:text-white transition-all">Ke Kamus</button>
                     ${!isLast ? 
-                        `<button onclick="openQuizModal('${key}', ${quizIndex + 1})" class="bg-white hover:bg-gray-200 text-black px-1.5 py-1 md:px-5 md:py-2 rounded-md md:rounded-lg text-[7px] md:text-sm font-bold shadow-md transition-all">Selanjutnya</button>` :
-                        `<button onclick="closeModal()" class="bg-white hover:bg-gray-200 text-black px-1.5 py-1 md:px-5 md:py-2 rounded-md md:rounded-lg text-[7px] md:text-sm font-bold shadow-md transition-all">Selesai</button>`
+                        `<button onclick="openQuizModal('${key}', ${quizIndex + 1})" class="bg-white hover:bg-gray-200 text-black px-1.5 py-1 md:px-5 md:py-2 rounded-sm md:rounded-lg text-[6px] md:text-sm font-bold shadow-md transition-all">Selanjutnya</button>` :
+                        `<button onclick="closeModal()" class="bg-white hover:bg-gray-200 text-black px-1.5 py-1 md:px-5 md:py-2 rounded-sm md:rounded-lg text-[6px] md:text-sm font-bold shadow-md transition-all">Selesai</button>`
                     }
                 </div>
             </div>
