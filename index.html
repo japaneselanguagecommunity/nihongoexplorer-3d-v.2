@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nihongo Explorer 3D - Ruang Tamu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Custom Scrollbar for Glassmorphism UI */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+        /* Disable text selection and default touch actions on canvas area */
+        body {
+            overscroll-behavior: none;
+            touch-action: none;
+        }
+        /* Efek Glassmorphism yang Jauh Lebih Kuat & Menonjol */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.45);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Animasi Kustom untuk Header Home */
+        @keyframes floatAndGlow {
+            0%, 100% {
+                transform: translateY(0);
+                text-shadow: 0 0 15px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,255,0.1);
+            }
+            50% {
+                transform: translateY(-8px);
+                text-shadow: 0 0 25px rgba(255,255,255,0.7), 0 0 45px rgba(255,255,255,0.4);
+            }
+        }
+        .animate-title {
+            animation: floatAndGlow 4s ease-in-out infinite;
+        }
+
+        /* Force Landscape Prompt for Mobile (Portrait) */
+        @media screen and (max-width: 899px) and (orientation: portrait) {
+            #landscape-prompt {
+                display: flex !important;
+            }
+        }
+    </style>
+</head>
+<body class="m-0 overflow-hidden bg-black text-white select-none font-sans">
+
+    <!-- Landscape Prompt Overlay -->
+    <div id="landscape-prompt" class="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg items-center justify-center text-center p-6 hidden flex-col">
+        <svg class="w-16 h-16 md:w-20 md:h-20 text-white mb-6 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" transform="rotate(90 12 12)"></rect>
+            <path d="M12 18h.01"></path>
+            <path d="M15.5 3a9 9 0 0 1 0 18"></path>
+        </svg>
+        <h2 class="text-xl md:text-3xl font-black text-white tracking-widest uppercase mb-2">MODE LANSKAP DIBUTUHKAN</h2>
+        <p class="text-[10px] md:text-sm text-gray-400 font-medium leading-relaxed">Mohon putar perangkat Anda secara horizontal<br>untuk kenyamanan dan pengalaman bermain yang maksimal.</p>
+    </div>
+
+    <!-- WebGL Canvas Container -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0"></div>
+
+    <!-- Home Menu Layer -->
+    <div id="home-menu" class="absolute inset-0 w-full h-full z-50 flex items-center justify-center bg-black/50 backdrop-blur-md transition-opacity duration-700">
+        <div class="glass-panel p-3 md:p-12 rounded-2xl flex flex-col items-center text-center max-w-md w-[90vw] relative overflow-hidden">
+            
+            <!-- Menu Utama -->
+            <div id="view-main" class="w-full flex flex-col items-center transition-all duration-300">
+                <h1 class="text-2xl md:text-5xl font-black text-white tracking-widest uppercase mb-1.5 md:mb-3 animate-title leading-tight">
+                    Nihongo<br>Explorer <span class="text-gray-400">3D</span>
+                </h1>
+                <p class="text-[10px] md:text-sm text-gray-300 mb-2 md:mb-8 font-medium tracking-wide">
+                    Jelajahi, temukan, dan kuasai kosakata Bahasa Jepang secara spasial.
+                </p>
+                
+                <div class="w-full flex flex-col gap-1.5 md:gap-3">
+                    <button onclick="startGame()" class="w-full bg-white hover:bg-gray-200 text-black py-1.5 md:py-4 rounded-xl text-[10px] md:text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] tracking-widest">
+                        MULAI EKSPLORASI
+                    </button>
+                    <button onclick="switchHomeView('view-kontrol')" class="w-full bg-white/10 hover:bg-white/20 text-white py-1 md:py-3 rounded-xl text-[9px] md:text-xs font-bold transition-all border border-white/20 tracking-wider">
+                        KONTROL PERANGKAT
+                    </button>
+                    <button onclick="switchHomeView('view-info')" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-1 md:py-3 rounded-xl text-[9px] md:text-xs font-bold transition-all border border-white/10 tracking-wider">
+                        INFORMASI
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kontrol View -->
+            <div id="view-kontrol" class="w-full flex flex-col items-center hidden transition-all duration-300">
+                <h2 class="text-lg md:text-2xl font-bold text-white mb-2 md:mb-6 uppercase tracking-wider">Kontrol Game</h2>
+                <div class="w-full space-y-1 md:space-y-4 text-left mb-2 md:mb-8">
+                    <div class="bg-white/5 p-2 md:p-4 rounded-lg border border-white/10">
+                        <h3 class="text-[10px] md:text-sm font-bold text-white mb-1 md:mb-2 flex items-center gap-2">💻 PC / Desktop</h3>
+                        <p class="text-[9px] md:text-xs text-gray-300"><span class="font-bold text-white bg-white/10 px-1 rounded">W A S D</span> / <span class="font-bold text-white bg-white/10 px-1 rounded">Panah</span> : Bergerak</p>
+                        <p class="text-[9px] md:text-xs text-gray-300 mt-1"><span class="font-bold text-white bg-white/10 px-1 rounded">Mouse Drag</span> : Melihat sekeliling</p>
+                    </div>
+                    <div class="bg-white/5 p-2 md:p-4 rounded-lg border border-white/10">
+                        <h3 class="text-[10px] md:text-sm font-bold text-white mb-1 md:mb-2 flex items-center gap-2">📱 HP / Tablet</h3>
+                        <p class="text-[9px] md:text-xs text-gray-300"><span class="font-bold text-white">Joystick Kiri</span> : Bergerak</p>
+                        <p class="text-[9px] md:text-xs text-gray-300 mt-1"><span class="font-bold text-white">Usap Layar Kanan</span> : Melihat sekeliling</p>
+                    </div>
+                </div>
+                <button onclick="switchHomeView('view-main')" class="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 md:py-2.5 rounded-xl text-[9px] md:text-xs font-bold transition-all tracking-wider">
+                    KEMBALI
+                </button>
+            </div>
+
+            <!-- Info View -->
+            <div id="view-info" class="w-full flex flex-col items-center hidden transition-all duration-300">
+                <div class="w-full bg-white/5 p-3 md:p-8 rounded-xl border border-white/10 text-center mb-2 md:mb-6 shadow-lg">
+                    <!-- Header & Subheader -->
+                    <h2 class="text-lg md:text-3xl font-black text-white tracking-widest uppercase mb-1">
+                        Nihongo Explorer <span class="text-gray-400">3D</span>
+                    </h2>
+                    <p class="text-[8px] md:text-xs text-gray-300 font-bold tracking-widest uppercase mb-2 md:mb-4">
+                        Spatial Learning Simulator
+                    </p>
+                    
+                    <!-- Description -->
+                    <p class="text-[9px] md:text-xs text-gray-400 leading-tight md:leading-relaxed mb-2 md:mb-6 font-medium">
+                        Game simulasi interaktif yang dirancang untuk mempercepat retensi memori spasial dan penguasaan kosakata bahasa Jepang dasar melalui observasi lingkungan sekitar secara terstruktur.
+                    </p>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col gap-1.5 md:gap-3 mb-2 md:mb-6">
+                        <a href="https://japanese-language-community.lovable.app" target="_blank" rel="noopener noreferrer" class="w-full bg-white text-black py-1.5 md:py-2.5 rounded-lg text-[9px] md:text-xs font-bold hover:bg-gray-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-wide block text-center">
+                            KUNJUNGI JLC
+                        </a>
+                        <a href="https://saweria.co/yourjlc" target="_blank" rel="noopener noreferrer" class="w-full bg-white/10 text-white border border-white/20 py-1.5 md:py-2.5 rounded-lg text-[9px] md:text-xs font-bold hover:bg-white/20 transition-all tracking-wide block text-center">
+                            DUKUNG PENGEMBANGAN GAME
+                        </a>
+                    </div>
+
+                    <!-- Footer License -->
+                    <div class="pt-2 md:pt-4 border-t border-white/10">
+                        <p class="text-[7px] md:text-[10px] text-gray-500 uppercase tracking-widest">Dikembangkan Oleh</p>
+                        <p class="text-[9px] md:text-xs text-white font-bold tracking-wider mt-0.5 md:mt-1">Japanese Language Community</p>
+                    </div>
+                </div>
+                
+                <button onclick="switchHomeView('view-main')" class="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1.5 md:py-2.5 rounded-xl text-[9px] md:text-xs font-bold transition-all tracking-wider">
+                    KEMBALI
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- UI Overlay Layer (Disembunyikan secara default) -->
+    <div id="ui-layer" class="absolute inset-0 w-full h-full pointer-events-none z-10 flex flex-col justify-between hidden opacity-0 transition-opacity duration-700">
+        
+        <!-- Top HUD -->
+        <div class="p-1.5 md:p-4 flex justify-between items-start">
+            <div class="glass-panel px-2 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl">
+                <h1 class="text-[9px] md:text-sm font-bold tracking-wider">Nihongo Explorer 3D</h1>
+                <p class="text-[7px] md:text-xs text-gray-300">Ruang Tamu (居間)</p>
+            </div>
+            <div class="pointer-events-auto">
+                <button onclick="openGlobalDictionary()" class="glass-panel px-2 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[9px] md:text-sm font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center gap-1.5 md:gap-2 shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                    📖 Kamus (辞書) <span id="kamus-counter" class="bg-white/20 px-1.5 py-0.5 md:px-2 rounded-full text-[8px] md:text-xs font-bold border border-white/20">0/15</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Crosshair -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)]"></div>
+
+        <!-- Interaction Prompt (Dynamic) -->
+        <div id="interaction-prompt" class="absolute top-[55%] left-1/2 transform -translate-x-1/2 glass-panel px-3 py-1.5 md:px-5 md:py-3 rounded-2xl flex flex-col items-center gap-1.5 md:gap-2 opacity-0 transition-opacity duration-300 pointer-events-auto shadow-2xl scale-90 md:scale-100">
+            <span id="prompt-name" class="text-sm md:text-lg font-bold">Objek</span>
+            <button id="btn-interact" class="bg-white text-black px-3 py-1 md:px-4 md:py-1.5 rounded-lg text-[10px] md:text-sm font-semibold hover:bg-gray-200 active:scale-95 transition-all">
+                Cek Objek
+            </button>
+        </div>
+
+        <!-- Mobile Controls Zone -->
+        <div class="w-full h-48 md:h-0 flex justify-between items-end p-2 md:p-6 pointer-events-auto">
+            <!-- Virtual Joystick -->
+            <div id="joystick-zone" class="w-20 h-20 md:w-32 md:h-32 md:hidden relative flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
+                <div id="joystick-knob" class="w-8 h-8 md:w-12 md:h-12 bg-white/50 rounded-full shadow-lg absolute"></div>
+            </div>
+            <!-- Look Zone for mobile right thumb -->
+            <div id="look-zone" class="w-1/2 h-full absolute right-0 bottom-0 md:hidden pointer-events-auto touch-none"></div>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 pointer-events-auto p-1 md:p-4">
+        <!-- Modal content injected via JS -->
+    </div>
+
+<script>
+/**
+ * STRUKTUR PANGKALAN DATA (objData) - ABSOLUT
+ */
+const objData = {
+    kotatsu: {
+        kanji: '炬燵', furigana: 'こたつ', romaji: 'kotatsu', arti: 'Meja pemanas', aksi: 'Duduk',
+        contoh: { jp: '冬はこたつに入ってみかんを食べます。', kana: 'ふゆは こたつに はいって みかんを たべます。', romaji: 'Fuyu wa kotatsu ni haitte mikan o tabemasu.', id: 'Musim dingin saya masuk ke kotatsu dan makan jeruk.' },
+        kaiwa: { 
+            a_jp: '外は雪が降っていてすごく寒いから、早くこたつに入って温まろう。', 
+            a_kana: 'そとは ゆきが ふっていて すごく さむいから、はやく こたつに はいって あたたまろう。',
+            a_romaji: 'Soto wa yuki ga futte ite sugoku samui kara, hayaku kotatsu ni haitte atatamarou.', 
+            a_id: 'Di luar sedang turun salju dan sangat dingin, ayo cepat masuk ke kotatsu dan menghangatkan diri.', 
+            b_jp: '本当だね。こたつに入りながら熱いお茶を飲んで、みかんを食べるのが冬の最高の楽しみだよ。', 
+            b_kana: 'ほんとうだね。こたつに はいりながら あつい おちゃを のんで、みかんを たべるのが ふゆの さいこうの たのしみだよ。',
+            b_romaji: 'Hontou da ne. Kotatsu ni hairinagara atsui ocha o nonde, mikan o taberu no ga fuyu no saikou no tanoshimi da yo.', 
+            b_id: 'Benar juga ya. Sambil masuk ke kotatsu minum teh panas dan makan jeruk adalah kenikmatan musim dingin terbaik.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '部屋の真ん中にこたつ___置きます。', opsi: ['で', 'に', 'を', 'が'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '寒い夜は、こたつで___のが一番です。', opsi: ['寝る', '走る', '泳ぐ', '立つ'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '猫がこたつの下で丸くなっています。', opsi: ['Saya tidur di dalam kotatsu.', 'Kucing melingkar di bawah kotatsu.', 'Kotatsu sangat hangat di musim dingin.', 'Kucing makan jeruk di kotatsu.'], jawaban: 1 }
+        ]
+    },
+    zabuton: {
+        kanji: '座布団', furigana: 'ざぶとん', romaji: 'zabuton', arti: 'Bantal duduk', aksi: 'Duduk',
+        contoh: { jp: '座布団に座ってください。', kana: 'ざぶとんに すわって ください。', romaji: 'Zabuton ni suwatte kudasai.', id: 'Silakan duduk di bantal.' },
+        kaiwa: { 
+            a_jp: 'お客様がいらっしゃるから、和室に綺麗な座布団を三枚並べておいてくれない？', 
+            a_kana: 'おきゃくさまが いらっしゃるから、わしつに きれいな ざぶとんを さんまい ならべて おいて くれない？',
+            a_romaji: 'Okyakusama ga irassharu kara, washitsu ni kireina zabuton o sanmai narabete oite kurenai?', 
+            a_id: 'Karena tamu akan datang, bisakah kamu menata tiga bantal duduk yang bersih di ruang gaya Jepang?', 
+            b_jp: '分かりました。一番上等な絹の座布団を出して、お茶の準備も一緒に済ませておきますね。', 
+            b_kana: 'わかりました。いちばん じょうとうな きぬの ざぶとんを だして、おちゃの じゅんびも いっしょに すませて おきますね。',
+            b_romaji: 'Wakarimashita. Ichiban joutouna kinu no zabuton o dashite, ocha no junbi mo issho ni sumasete okimasu ne.', 
+            b_id: 'Mengerti. Saya akan mengeluarkan bantal duduk sutra terbaik dan sekalian menyiapkan tehnya.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '床に座布団___敷いて座ります。', opsi: ['を', 'へ', 'に', 'で'], jawaban: 0 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '古くなった座布団を新しいものと___。', opsi: ['洗う', '交換する', '投げる', '食べる'], jawaban: 1 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: 'この座布団はとても柔らかくて座り心地がいいです。', opsi: ['Saya mencuci bantal duduk setiap hari.', 'Bantal duduknya sangat bersih dan rapi.', 'Bantal duduk ini sangat empuk dan nyaman diduduki.', 'Tolong duduk di bantal yang bersih.'], jawaban: 2 }
+        ]
+    },
+    terebi: {
+        kanji: 'テレビ', furigana: 'テレビ', romaji: 'terebi', arti: 'Televisi', aksi: 'Nonton',
+        contoh: { jp: '毎日テレビを見ます。', kana: 'まいにち テレビを みます。', romaji: 'Mainichi terebi o mimasu.', id: 'Setiap hari menonton TV.' },
+        kaiwa: { 
+            a_jp: '今夜８時から大好きなドラマの最終回が放送されるから、絶対にテレビの前に集合だよ！', 
+            a_kana: 'こんや はちじから だいすきな ドラマの さいしゅうかいが ほうそう されるから、ぜったいに テレビの まえに しゅうごうだよ！',
+            a_romaji: 'Kon\'ya hachiji kara daisukina dorama no saishuukai ga housou sareru kara, zettai ni terebi no mae ni shuugou da yo!', 
+            a_id: 'Malam ini jam 8 episode terakhir drama kesukaanku akan tayang, jadi pokoknya harus kumpul di depan TV!', 
+            b_jp: 'もちろん覚えているよ。放送が始まる前に、ポップコーンと飲み物を準備してスタンバイしておこう。', 
+            b_kana: 'もちろん おぼえているよ。ほうそうが はじまる まえに、ポップコーンと のみものを じゅんびして スタンバイして おこう。',
+            b_romaji: 'Mochiron oboete iru yo. Housou ga hajimaru mae ni, poppukoon to nomimono o junbi shite sutanbai shite okou.', 
+            b_id: 'Tentu saja aku ingat. Sebelum siarannya mulai, ayo siapkan berondong jagung dan minuman lalu bersiap-siap.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '晩ご飯を食べながらテレビ___見ます。', opsi: ['が', 'に', 'を', 'で'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: 'リモコンでテレビの電源を___。', opsi: ['切る', 'つける', '開ける', '閉める'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '妹はいつもテレビの前に座っています。', opsi: ['Saya menonton TV bersama adik saya.', 'Acara TV malam ini sangat seru.', 'Saya mematikan TV karena adik tidur.', 'Adik perempuan saya selalu duduk di depan TV.'], jawaban: 3 }
+        ]
+    },
+    sofa: {
+        kanji: 'ソファ', furigana: 'ソファ', romaji: 'sofa', arti: 'Sofa', aksi: 'Istirahat',
+        contoh: { jp: 'ソファで寝てしまった。', kana: 'ソファで ねて しまった。', romaji: 'Sofa de nete shimatta.', id: 'Ketiduran di sofa.' },
+        kaiwa: { 
+            a_jp: '週末はどこにも出かけず、このふかふかのソファに寝転んで一日中映画を見て過ごしたいな。', 
+            a_kana: 'しゅうまつは どこにも でかけず、この ふかふかの ソファに ねころんで いちにちじゅう えいがを みて すごしたいな。',
+            a_romaji: 'Shuumatsu wa doko ni mo dekakezu, kono fukafukano sofa ni nekoronde ichinichijuu eiga o mite sugoshitai na.', 
+            a_id: 'Akhir pekan aku tidak ingin pergi kemana-mana, rasanya ingin rebahan di sofa empuk ini dan menghabiskan sepanjang hari menonton film.', 
+            b_jp: 'それは素晴らしい計画だね。じゃあ、私は隣で読みかけの小説を読みながらリラックスするよ。', 
+            b_kana: 'それは すばらしい けいかくだね。じゃあ、わたしは となりで よみかけの しょうせつを よみながら リラックスするよ。',
+            b_romaji: 'Sore wa subarashii keikaku da ne. Jaa, watashi wa tonari de yomikake no shousetsu o yominagara rirakkusu suru yo.', 
+            b_id: 'Itu rencana yang luar biasa. Kalau begitu, aku akan bersantai sambil membaca novelku yang belum selesai di sebelahmu.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '新しいソファ___買いました。', opsi: ['に', 'を', 'で', 'へ'], jawaban: 1 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '居間に大きなソファを___。', opsi: ['置く', '立つ', '歩く', '走る'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '彼はソファに座って新聞を読んでいます。', opsi: ['Saya membeli sofa yang nyaman.', 'Sofa ini sangat empuk dan besar.', 'Dia duduk di sofa dan membaca koran.', 'Saya tidur pulas di sofa ini.'], jawaban: 2 }
+        ]
+    },
+    hondana: {
+        kanji: '本棚', furigana: 'ほんだな', romaji: 'hondana', arti: 'Rak buku', aksi: 'Cari Buku',
+        contoh: { jp: '本棚に本がたくさんあります。', kana: 'ほんだなに ほんが たくさん あります。', romaji: 'Hondana ni hon ga takusan arimasu.', id: 'Ada banyak buku di rak buku.' },
+        kaiwa: { 
+            a_jp: '新しい本をたくさん買ったから、本棚を整理してスペースを作らないといけないんだけど、手伝ってくれる？', 
+            a_kana: 'あたらしい ほんを たくさん かったから、ほんだなを せいりして スペースを つくらないと いけないんだけど、てつだって くれる？',
+            a_romaji: 'Atarashii hon o takusan katta kara, hondana o seiri shite supeesu o tsukuranai to ikenai ndakedo, tetsudatte kureru?', 
+            a_id: 'Karena aku beli banyak buku baru, aku harus merapikan rak buku untuk membuat ruang, maukah kamu membantu?', 
+            b_jp: 'いいよ。ジャンルや作家ごとに分けて綺麗に並べ直せば、もっとたくさん収納できると思うよ。', 
+            b_kana: 'いいよ。ジャンルや さっか ごとに わけて きれいに ならべなおせば、もっと たくさん しゅうのう できると おもうよ。',
+            b_romaji: 'Ii yo. Janru ya sakka goto ni wakete kirei ni narabenaoseba, motto takusan shuunou dekiru to omou yo.', 
+            b_id: 'Boleh. Kalau kita pisahkan berdasarkan genre dan penulis lalu menyusunnya ulang, kurasa bisa menyimpan lebih banyak lagi.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '読み終わった本は本棚___戻してください。', opsi: ['で', 'に', 'を', 'が'], jawaban: 1 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '木で作られた立派な本棚を___。', opsi: ['買う', '食べる', '飲む', '壊す'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '私の部屋には本棚が二つあります。', opsi: ['Ada dua rak buku di kamar saya.', 'Saya menaruh kamus di rak buku.', 'Buku itu ada di sebelah kamus.', 'Rak buku itu penuh dengan buku tebal.'], jawaban: 0 }
+        ]
+    },
+    mado: {
+        kanji: '窓', furigana: 'まど', romaji: 'mado', arti: 'Jendela', aksi: 'Lihat Luar',
+        contoh: { jp: '窓を開けて換気します。', kana: 'まどを あけて かんきします。', romaji: 'Mado o akete kanki shimasu.', id: 'Membuka jendela untuk ventilasi.' },
+        kaiwa: { 
+            a_jp: '今日は天気が良くて風も気持ちいいから、窓を全開にして部屋の空気を入れ替えようか。', 
+            a_kana: 'きょうは てんきが よくて かぜも きもちいいから、まどを ぜんかいに して へやの くうきを いれかえようか。',
+            a_romaji: 'Kyou wa tenki ga yokute kaze mo kimochiii kara, mado o zenkai ni shite heya no kuuki o irekaeyou ka.', 
+            a_id: 'Karena hari ini cuacanya bagus dan anginnya juga sejuk, bagaimana kalau kita buka jendela lebar-lebar untuk mengganti udara di kamar?', 
+            b_jp: '賛成！ついでに窓ガラスもピカピカに磨いて、もっとたくさんの太陽の光が入るようにしよう。', 
+            b_kana: 'さんせい！ついでに まどガラスも ピカピカに みがいて、もっと たくさんの たいようの ひかりが はいる ように しよう。',
+            b_romaji: 'Sansei! Tsuideni madogarasu mo pikapika ni migaite, motto takusan no taiyou no hikari ga hairu you ni shiyou.', 
+            b_id: 'Setuju! Sekalian kita lap kaca jendelanya sampai mengkilap agar lebih banyak cahaya matahari yang masuk.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '雨が降ってきたので窓___閉めました。', opsi: ['が', 'に', 'を', 'で'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '窓から外の景色を___。', opsi: ['開ける', '眺める', 'つける', '消す'], jawaban: 1 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '窓ガラスが割れてしまいました。', opsi: ['Saya melihat pemandangan indah dari jendela.', 'Pemandangan indah terlihat dari jendela.', 'Jendelanya sangat bersih dan indah.', 'Kaca jendelanya pecah.'], jawaban: 3 }
+        ]
+    },
+    doa: {
+        kanji: 'ドア', furigana: 'ドア', romaji: 'doa', arti: 'Pintu', aksi: 'Buka',
+        contoh: { jp: 'ドアに鍵をかけました。', kana: 'ドアに かぎを かけました。', romaji: 'Doa ni kagi o kakemashita.', id: 'Saya mengunci pintu.' },
+        kaiwa: { 
+            a_jp: '外から変な音が聞こえるから、ドアの鍵がしっかり閉まっているかもう一度確認してきてくれる？', 
+            a_kana: 'そとから へんな おとが きこえるから、ドアの かぎが しっかり しまっているか もういちど かくにんして きて くれる？',
+            a_romaji: 'Soto kara henna oto ga kikoeru kara, doa no kagi ga shikkari shimatte iru ka mou ichido kakunin shite kite kureru?', 
+            a_id: 'Terdengar suara aneh dari luar, bisakah kamu pastikan sekali lagi apakah kunci pintu sudah tertutup rapat?', 
+            b_jp: 'さっき鍵をかけたはずだけど、心配ならチェーンもかけて二重にロックしておくから安心して。', 
+            b_kana: 'さっき かぎを かけた はず だけど、しんぱいなら チェーンも かけて にじゅうに ロックして おくから あんしんして。',
+            b_romaji: 'Sakki kagi o kaketa hazu dakedo, shinpai nara cheen mo kakete nijuu ni rokku shite oku kara anshin shite.', 
+            b_id: 'Seharusnya tadi sudah kukunci, tapi kalau khawatir aku juga akan pasang rantainya sebagai kunci ganda jadi tenang saja.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: 'ドア___静かに開けてください。', opsi: ['を', 'に', 'で', 'が'], jawaban: 0 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '部屋を出る時は必ずドアを___。', opsi: ['開ける', '閉める', 'つける', '消す'], jawaban: 1 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '彼はドアを強く叩きました。', opsi: ['Seseorang membuka pintu.', 'Dia mengetuk pintu dengan keras.', 'Pintunya dibiarkan terbuka.', 'Tolong tutup pintunya.'], jawaban: 1 }
+        ]
+    },
+    tokei: {
+        kanji: '時計', furigana: 'とけい', romaji: 'tokei', arti: 'Jam (Dinding/Tangan)', aksi: 'Cek Waktu',
+        contoh: { jp: '壁の時計が止まっています。', kana: 'かべの とけいが とまっています。', romaji: 'Kabe no tokei ga tomatte imasu.', id: 'Jam dindingnya berhenti.' },
+        kaiwa: { 
+            a_jp: '壁の時計が実際の時間より５分ほど遅れているみたいだから、電池を交換して時間を合わせておいて。', 
+            a_kana: 'かべの とけいが じっさいの じかんより ごふん ほど おくれている みたい だから、でんちを こうかんして じかんを あわせて おいて。',
+            a_romaji: 'Kabe no tokei ga jissai no jikan yori gofun hodo okurete iru mitai dakara, denchi o koukan shite jikan o awasete oite.', 
+            a_id: 'Jam dindingnya sepertinya terlambat sekitar 5 menit dari waktu sebenarnya, tolong ganti baterainya dan sesuaikan waktunya.', 
+            b_jp: '了解。新しい電池を入れたら、スマートフォンの時計を見ながら正確な時間にセットしておくよ。', 
+            b_kana: 'りょうかい。あたらしい でんちを いれたら、スマートフォンの とけいを みながら せいかくな じかんに セットして おくよ。',
+            b_romaji: 'Ryoukai. Atarashii denchi o iretara, sumaatofon no tokei o minagara seikakuna jikan ni setto shite oku yo.', 
+            b_id: 'Dimengerti. Setelah memasukkan baterai baru, aku akan menyetelnya ke waktu yang tepat sambil melihat jam di ponsel.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '朝起きて、まず時計___見ます。', opsi: ['に', 'が', 'を', 'で'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '新しい時計の時間を___。', opsi: ['合わせる', '直る', '走る', '飛ぶ'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: 'この時計はデザインがとてもシンプルです。', opsi: ['Jam tangan saya baru dan mahal.', 'Saya terlambat melihat jam.', 'Jam ini desainnya sangat simpel.', 'Jam dinding itu rusak.'], jawaban: 2 }
+        ]
+    },
+    shokubutsu: {
+        kanji: '植物', furigana: 'しょくぶつ', romaji: 'shokubutsu', arti: 'Tanaman (Hias)', aksi: 'Siram',
+        contoh: { jp: '部屋に植物を置くとリラックスできます。', kana: 'へやに しょくぶつを おくと リラックス できます。', romaji: 'Heya ni shokubutsu o oku to rirakkusu dekimasu.', id: 'Meletakkan tanaman di kamar bisa bikin rileks.' },
+        kaiwa: { 
+            a_jp: '最近、部屋に置いている観葉植物の葉っぱが少し元気ないみたいなんだけど、水不足かな？', 
+            a_kana: 'さいきん、へやに おいている かんようしょくぶつの はっぱが すこし げんき ない みたい なんだけど、みずぶそく かな？',
+            a_romaji: 'Saikin, heya ni oite iru kan\'youshokubutsu no happa ga sukoshi genki nai mitai nandakedo, mizubusoku kana?', 
+            a_id: 'Akhir-akhir ini, daun tanaman hias yang ditaruh di kamar sepertinya agak layu, apa mungkin kurang air?', 
+            b_jp: '土が乾いているからたっぷり水をあげて、少し日当たりの良い窓際に移動させたほうがいいかもしれないね。', 
+            b_kana: 'つちが かわいているから たっぷり みずを あげて、すこし ひあたりの よい まどぎわに いどう させた ほうが いい かもしれないね。',
+            b_romaji: 'Tsuchi ga kawaite iru kara tappuri mizu o agete, sukoshi hiatari no yoi madogiwa ni idou saseta hou ga ii kamoshirenai ne.', 
+            b_id: 'Tanahnya kering jadi lebih baik beri banyak air, dan mungkin sebaiknya dipindahkan ke dekat jendela yang sedikit lebih banyak mendapat sinar matahari.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '庭に新しい植物___植えました。', opsi: ['を', 'に', 'が', 'で'], jawaban: 0 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '植物が日光を浴びて大きく___。', opsi: ['成長する', '死ぬ', '落ちる', '切る'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: 'この植物はあまり水を必要としません。', opsi: ['Saya menyiram tanaman hijau di kamar.', 'Tanaman ini tidak membutuhkan banyak air.', 'Kamar ini berwarna hijau.', 'Tanaman itu mati karena tidak ada air.'], jawaban: 1 }
+        ]
+    },
+    shashin: {
+        kanji: '写真', furigana: 'しゃしん', romaji: 'shashin', arti: 'Foto / Bingkai', aksi: 'Lihat',
+        contoh: { jp: '家族の写真を飾っています。', kana: 'かぞくの しゃしんを かざっています。', romaji: 'Kazoku no shashin o kazatte imasu.', id: 'Saya memajang foto keluarga.' },
+        kaiwa: { 
+            a_jp: 'この壁に飾ってある古い写真は、私たちが大学生の時に初めて一緒に海外旅行へ行った時のものだよ。', 
+            a_kana: 'この かべに かざって ある ふるい しゃしんは、わたしたちが だいがくせいの ときに はじめて いっしょに かいがいりょこうへ いった ときの ものだよ。',
+            a_romaji: 'Kono kabe ni kazatte aru furui shashin wa, watashitachi ga daigakusei no toki ni hajimete issho ni kaigairyokou e itta toki no mono da yo.', 
+            a_id: 'Foto lama yang dipajang di dinding ini adalah foto saat kita pertama kali bepergian ke luar negeri bersama saat masih mahasiswa.', 
+            b_jp: '懐かしいね！あの時は道に迷ったりトラブルも多かったけど、今となっては最高に笑える思い出だよ。', 
+            b_kana: 'なつかしいね！あの ときは みちに まよったり トラブルも おおかった けど、いまとなっては さいこうに わらえる おもいでだよ。',
+            b_romaji: 'Natsukashii ne! Ano toki wa michi ni mayottari toraburu mo ookatta kedo, ima to natte wa saikou ni waraeru omoide da yo.', 
+            b_id: 'Mengingatkan masa lalu ya! Waktu itu kita tersesat dan banyak masalah, tapi sekarang itu jadi kenangan yang paling membuat tertawa.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: 'スマートフォンで風景の写真___撮ります。', opsi: ['が', 'に', 'を', 'で'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '友達に旅行の写真を___。', opsi: ['飾る', '見せる', '隠す', '燃やす'], jawaban: 1 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '昔のアルバムから古い写真を見つけました。', opsi: ['Anak-anak sedang berfoto.', 'Ini adalah foto anak saya.', 'Saya memotret anak-anak.', 'Saya menemukan foto lama dari album masa lalu.'], jawaban: 3 }
+        ]
+    },
+    denki: {
+        kanji: '電気', furigana: 'でんき', romaji: 'denki', arti: 'Lampu / Listrik', aksi: 'Nyalakan',
+        contoh: { jp: '暗いから電気をつけて。', kana: 'くらいから でんきを つけて。', romaji: 'Kurai kara denki o tsukete.', id: 'Karena gelap, tolong nyalakan lampu.' },
+        kaiwa: { 
+            a_jp: 'もう夜遅くて外は真っ暗だから、部屋の電気を全部つけて明るくしてから夕食の準備を始めましょう。', 
+            a_kana: 'もう よる おそくて そとは まっくら だから、へやの でんきを ぜんぶ つけて あかるく してから ゆうしょくの じゅんびを はじめましょう。',
+            a_romaji: 'Mou yoru osokute soto wa makkura dakara, heya no denki o zenbu tsukete akaruku shite kara yuushoku no junbi o hajimemashou.', 
+            a_id: 'Karena sudah larut malam dan di luar sangat gelap, mari kita nyalakan semua lampu kamar agar terang sebelum mulai menyiapkan makan malam.', 
+            b_jp: 'そうだね。食事の雰囲気が良くなるように、天井の電気だけでなくテーブルの上の間接照明もつけてみるよ。', 
+            b_kana: 'そうだね。しょくじの ふんいきが よく なる ように、てんじょうの でんき だけでなく テーブルの うえの かんせつしょうめいも つけて みるよ。',
+            b_romaji: 'Sou da ne. Shokuji no fun\'iki ga yoku naru you ni, tenjou no denki dake de naku teeburu no ue no kansetsushoumei mo tsukete miru yo.', 
+            b_id: 'Benar juga. Agar suasana makannya lebih enak, aku akan menyalakan pencahayaan tidak langsung di atas meja juga, bukan hanya lampu langit-langit.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '部屋を出る時は必ず電気___消してください。', opsi: ['に', 'が', 'で', 'を'], jawaban: 3 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '停電で電気が突然___。', opsi: ['消える', 'つける', '開ける', '閉める'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '最近は電気代が高くなっています。', opsi: ['Akhir-akhir ini biaya listrik menjadi mahal.', 'Kamar ini sangat gelap.', 'Tolong nyalakan lampu kamar.', 'Lampu kamar sudah dimatikan.'], jawaban: 0 }
+        ]
+    },
+    gomibako: {
+        kanji: 'ゴミ箱', furigana: 'ゴミばこ', romaji: 'gomibako', arti: 'Tempat sampah', aksi: 'Buang',
+        contoh: { jp: 'ゴミはゴミ箱に捨ててください。', kana: 'ゴミは ゴミばこに すてて ください。', romaji: 'Gomi wa gomibako ni sutete kudasai.', id: 'Tolong buang sampah di tempat sampah.' },
+        kaiwa: { 
+            a_jp: 'キッチンとリビングのゴミ箱がもういっぱいになってしまったから、明日の朝早くゴミ捨て場に出しておいて。', 
+            a_kana: 'キッチンと リビングの ゴミばこが もう いっぱいになって しまったから、あしたの あさ はやく ゴミすてばに だして おいて。',
+            a_romaji: 'Kicchin to ribingu no gomibako ga mou ippai ni natte shimatta kara, ashita no asa hayaku gomisuteba ni dashite oite.', 
+            a_id: 'Tempat sampah di dapur dan ruang tamu sudah penuh, jadi tolong keluarkan ke tempat pembuangan sampah besok pagi-pagi.', 
+            b_jp: '分かった。燃えるゴミとプラスチックがちゃんと分別されているか確認してから、新しいゴミ袋をセットしておくよ。', 
+            b_kana: 'わかった。もえる ゴミと プラスチックが ちゃんと ぶんべつ されているか かくにん してから、あたらしい ゴミぶくろを セットして おくよ。',
+            b_romaji: 'Wakatta. Moeru gomi to purasuchikku ga chanto bunbetsu sarete iru ka kakunin shite kara, atarashii gomibukuro o setto shite oku yo.', 
+            b_id: 'Baik. Aku akan periksa apakah sampah yang bisa dibakar dan plastik sudah dipilah dengan benar sebelum memasang kantong sampah baru.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: 'ゴミ箱の中___空にしてください。', opsi: ['を', 'に', 'が', 'で'], jawaban: 0 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '新しいゴミ箱をスーパーで___。', opsi: ['買う', '捨てる', '食べる', '飲む'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: 'このゴミ箱は蓋が自動で開きます。', opsi: ['Saya membuang sampah di dapur.', 'Tempat sampah ini tutupnya terbuka secara otomatis.', 'Sampah di dapur sudah penuh.', 'Dapur ini tidak memiliki tempat sampah.'], jawaban: 1 }
+        ]
+    },
+    ocha: {
+        kanji: 'お茶', furigana: 'おちゃ', romaji: 'ocha', arti: 'Teh (hijau)', aksi: 'Minum',
+        contoh: { jp: '熱いお茶を飲みます。', kana: 'あつい おちゃを のみます。', romaji: 'Atsui ocha o nomimasu.', id: 'Minum teh panas.' },
+        kaiwa: { 
+            a_jp: '外から帰ってきて体がすごく冷え切っているから、熱くて香りの良い緑茶を淹れてもらえませんか？', 
+            a_kana: 'そとから かえって きて からだが すごく ひえきっているから、あつくて かおりの よい りょくちゃを いれて もらえませんか？',
+            a_romaji: 'Soto kara kaette kite karada ga sugoku hiekitte iru kara, atsukute kaori no yoi ryokucha o irete moraemasen ka?', 
+            a_id: 'Karena baru pulang dari luar dan badanku sangat kedinginan, bisakah tolong seduhkan teh hijau yang panas dan wangi?', 
+            b_jp: 'ええ、もちろん。京都で買ってきた特上の茶葉があるから、それに合う美味しい和菓子と一緒にお出ししますね。', 
+            b_kana: 'ええ、もちろん。きょうとで かってきた とくじょうの ちゃばが あるから、それに あう おいしい わがしと いっしょに おだし しますね。',
+            b_romaji: 'Ee, mochiron. Kyouto de katte kita tokujou no chaba ga aru kara, sore ni au oishii wagashi to issho ni odashi shimasu ne.', 
+            b_id: 'Ya, tentu saja. Aku punya daun teh kualitas terbaik yang dibeli di Kyoto, jadi aku akan menyajikannya bersama kue tradisional Jepang yang lezat dan cocok dengan tehnya.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '食事の後に冷たいお茶___飲みます。', opsi: ['に', 'が', 'を', 'で'], jawaban: 2 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '急須にお湯を注いでお茶を___。', opsi: ['淹れる', '飲む', '捨てる', '投げる'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '日本の緑茶は健康に良いと言われています。', opsi: ['Teh ini rasanya sangat manis.', 'Teh hijau Jepang dikatakan baik untuk kesehatan.', 'Saya membuat teh yang wangi.', 'Mari minum teh yang wangi ini.'], jawaban: 1 }
+        ]
+    },
+    hon: {
+        kanji: '本', furigana: 'ほん', romaji: 'hon', arti: 'Buku', aksi: 'Baca',
+        contoh: { jp: '面白い本を読んでいます。', kana: 'おもしろい ほんを よんでいます。', romaji: 'Omoshiroi hon o yonde imasu.', id: 'Saya sedang membaca buku yang menarik.' },
+        kaiwa: { 
+            a_jp: 'この間貸してくれたミステリー小説、予想外の結末が衝撃的すぎて昨日の夜は徹夜で一気に読んでしまったよ。', 
+            a_kana: 'このあいだ かして くれた ミステリーしょうせつ、よそうがいの けつまつが しょうげきてき すぎて きのうの よるは てつやで いっきに よんで しまったよ。',
+            a_romaji: 'Kono aida kashite kureta misuterii shousetsu, yosougai no ketsumatsu ga shougekiteki sugite kinou no yoru wa tetsuya de ikki ni yonde shimatta yo.', 
+            a_id: 'Novel misteri yang kamu pinjamkan tempo hari, akhir ceritanya yang tak terduga sangat mengejutkan sampai-sampai tadi malam aku begadang untuk membacanya sekaligus.', 
+            b_jp: '気に入ってくれて嬉しいな。同じ作家が書いた続編も持っているから、次に会う時に必ず持ってくるね。', 
+            b_kana: 'きにいって くれて うれしいな。おなじ さっかが かいた ぞくへんも もっているから、つぎに あう ときに かならず もって くるね。',
+            b_romaji: 'Ki ni itte kurete ureshii na. Onaji sakka ga kaita zokuhen mo motte iru kara, tsugi ni au toki ni kanarazu motte kuru ne.', 
+            b_id: 'Aku senang kamu menyukainya. Aku juga punya sekuel yang ditulis oleh penulis yang sama, jadi aku pasti akan membawanya saat kita bertemu berikutnya.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: '週末は図書館で本___借ります。', opsi: ['を', 'に', 'で', 'が'], jawaban: 0 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: '彼は毎日一冊の本を___。', opsi: ['書く', '読む', '聞く', '話す'], jawaban: 1 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: '私は歴史に関する本を集めています。', opsi: ['Saya akan membaca buku malam ini.', 'Buku itu sangat menarik untuk dibaca.', 'Saya mengoleksi buku yang berhubungan dengan sejarah.', 'Saya membaca buku setiap malam.'], jawaban: 2 }
+        ]
+    },
+    eakon: {
+        kanji: 'エアコン', furigana: 'エアコン', romaji: 'eakon', arti: 'AC / Pendingin ruangan', aksi: 'Setel Suhu',
+        contoh: { jp: 'エアコンをつけて部屋を涼しくします。', kana: 'エアコンを つけて へやを すずしく します。', romaji: 'Eakon o tsukete heya o suzushiku shimasu.', id: 'Menyalakan AC untuk mendinginkan kamar.' },
+        kaiwa: { 
+            a_jp: '真夏で部屋の中がサウナみたいに暑いから、急いでエアコンをつけて一番強い冷房モードにしてくれない？', 
+            a_kana: 'まなつで へやの なかが サウナ みたいに あつい から、いそいで エアコンを つけて いちばん つよい れいぼう モードに して くれない？',
+            a_romaji: 'Manatsu de heya no naka ga sauna mitai ni atsui kara, isoide eakon o tsukete ichiban tsuyoi reibou moodo ni shite kurenai?', 
+            a_id: 'Karena ini pertengahan musim panas dan di dalam kamar panasnya seperti sauna, bisakah kamu segera menyalakan AC dan mengaturnya ke mode pendingin paling kuat?', 
+            b_jp: 'すぐに設定するよ。でも、急に冷やすと体調を崩しやすいから、少し涼しくなったら設定温度を上げるようにしよう。', 
+            b_kana: 'すぐに せってい するよ。でも、きゅうに ひやすと たいちょうを くずしやすい から、すこし すずしく なったら せってい おんどを あげる ように しよう。',
+            b_romaji: 'Sugu ni settei suru yo. Demo, kyuu ni hiyasu to taichou o kuzushiyasui kara, sukoshi suzushiku nattara settei ondo o ageru you ni shiyou.', 
+            b_id: 'Akan segera kuatur. Tapi, mendinginkan secara tiba-tiba bisa membuat kondisi tubuh menurun, jadi setelah sedikit sejuk mari kita naikkan suhu pengaturannya.' 
+        },
+        kuis: [
+            { tipe: 'partikel', instruksi: 'Lengkapi partikel yang tepat', soal: 'リモコンでエアコンの温度___設定します。', opsi: ['が', 'に', 'で', 'を'], jawaban: 3 },
+            { tipe: 'kata_kerja', instruksi: 'Lengkapi kata kerja yang tepat', soal: 'エアコンのフィルターを綺麗に___。', opsi: ['掃除する', '下げる', '止める', '動かす'], jawaban: 0 },
+            { tipe: 'koreksi', instruksi: 'Pilih terjemahan yang paling tepat', soal: 'この部屋のエアコンはとても静かです。', opsi: ['AC di kamar ini sangat tenang/sunyi.', 'AC di kamar ini sangat dingin.', 'Tolong matikan AC karena kedinginan.', 'Kamar ini tidak memiliki AC.'], jawaban: 0 }
+        ]
+    }
+};
+
+/**
+ * CORE STATE & VARIABLES
+ */
+let scene, camera, renderer;
+let cameraGroup; // Rigging FPS (Hanya grup kamera)
+let interactableObjects = [];
+let raycaster, mouseCenter;
+let currentLookObj = null;
+
+// Game State
+let gameStarted = false;
+
+// Logika Kamus Global (Kolektor)
+const unlockedObjects = new Set();
+const totalObjects = Object.keys(objData).length;
+
+// Movement & Controls
+const moveState = { forward: false, backward: false, left: false, right: false };
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+let isMoving = false;
+let movementSpeed = 8.0;
+
+// Mouse/Touch Look variables
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+
+// Mobile Joystick
+let joystickActive = false;
+let joystickVector = { x: 0, y: 0 };
+let joystickBase, joystickKnob;
+
+// Clock for animations
+const clock = new THREE.Clock();
+
+/**
+ * HOME MENU CONTROLS
+ */
+window.startGame = function() {
+    gameStarted = true;
+    
+    // Memaksa layar menjadi Fullscreen & mode Lanskap di HP (Jika API didukung peramban)
+    try {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch((e) => console.warn('Penguncian orientasi gagal:', e));
+                }
+            }).catch((e) => console.warn('Akses Fullscreen gagal:', e));
+        }
+    } catch (e) {
+        console.warn('API Fullscreen tidak tersedia.', e);
+    }
+
+    const homeMenu = document.getElementById('home-menu');
+    const uiLayer = document.getElementById('ui-layer');
+    
+    homeMenu.style.opacity = '0';
+    setTimeout(() => {
+        homeMenu.classList.add('hidden');
+        uiLayer.classList.remove('hidden');
+        // Memberikan jeda sebelum memunculkan opacity HUD agar transisinya mulus
+        setTimeout(() => uiLayer.style.opacity = '1', 50);
+    }, 700);
+};
+
+window.switchHomeView = function(viewId) {
+    document.getElementById('view-main').classList.add('hidden');
+    document.getElementById('view-kontrol').classList.add('hidden');
+    document.getElementById('view-info').classList.add('hidden');
+    
+    document.getElementById(viewId).classList.remove('hidden');
+};
+
+/**
+ * INITIALIZATION
+ */
+function init() {
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1a); // Dark monochrome theme
+    scene.fog = new THREE.FogExp2(0x1a1a1a, 0.05);
+
+    // Camera setup
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    
+    // FPS Rigging
+    cameraGroup = new THREE.Group();
+    cameraGroup.position.set(0, 1.6, 5); // Stand height
+    scene.add(cameraGroup);
+    cameraGroup.add(camera);
+
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffeebb, 0.8);
+    dirLight.position.set(5, 10, 2);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.top = 10;
+    dirLight.shadow.camera.bottom = -10;
+    dirLight.shadow.camera.left = -10;
+    dirLight.shadow.camera.right = 10;
+    scene.add(dirLight);
+
+    // Build Environment
+    buildRoom();
+    buildInteractiveObjects();
+
+    // Raycaster
+    raycaster = new THREE.Raycaster();
+    mouseCenter = new THREE.Vector2(0, 0); // Always center
+
+    // PWA Setup
+    setupPWA();
+
+    // Event Listeners
+    setupInputListeners();
+    setupUIListeners();
+
+    // Start Loop
+    animate();
+}
+
+/**
+ * PWA & DYNAMIC LOGO SETUP
+ */
+function setupPWA() {
+    // 1. Generate Logo Prosedural (512x512)
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    // Latar Putih
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Styling Teks Hitam
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Desain Tipografi (Menyesuaikan ukuran agar presisi & proporsional)
+    ctx.font = 'bold 70px "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('Nihongo', 256, 170);
+
+    ctx.font = 'bold 65px "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('Explorer', 256, 256);
+
+    ctx.font = '900 120px "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('3D', 256, 370);
+
+    const logoUrl = canvas.toDataURL('image/png');
+
+    // 2. Buat PWA Manifest
+    const manifest = {
+        name: "Nihongo Explorer 3D",
+        short_name: "Nihongo3D",
+        description: "Simulator memori spasial bahasa Jepang.",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#1a1a1a",
+        icons: [
+            {
+                src: logoUrl,
+                sizes: "512x512",
+                type: "image/png",
+                purpose: "any maskable"
+            }
+        ]
+    };
+
+    // Inject Manifest via Data URI (Tanpa file eksternal)
+    const manifestDataUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+    const linkManifest = document.createElement('link');
+    linkManifest.rel = 'manifest';
+    linkManifest.href = manifestDataUrl;
+    document.head.appendChild(linkManifest);
+
+    // Inject Apple Touch Icon
+    const linkApple = document.createElement('link');
+    linkApple.rel = 'apple-touch-icon';
+    linkApple.href = logoUrl;
+    document.head.appendChild(linkApple);
+
+    // Inject PWA Meta Tags
+    const metaTheme = document.createElement('meta');
+    metaTheme.name = 'theme-color';
+    metaTheme.content = '#1a1a1a';
+    document.head.appendChild(metaTheme);
+
+    const metaApple = document.createElement('meta');
+    metaApple.name = 'apple-mobile-web-app-capable';
+    metaApple.content = 'yes';
+    document.head.appendChild(metaApple);
+
+    const metaStatus = document.createElement('meta');
+    metaStatus.name = 'apple-mobile-web-app-status-bar-style';
+    metaStatus.content = 'black-translucent';
+    document.head.appendChild(metaStatus);
+
+    // 3. Service Worker (Disuntikkan langsung via Blob untuk Single-File Architecture)
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+            self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+        `;
+        
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        
+        navigator.serviceWorker.register(swUrl).then(() => {
+            console.log('PWA Service Worker terdaftar (Mode Single-File/Blob).');
+        }).catch((err) => {
+            console.log('Peringatan SW:', err);
+        });
+    }
+}
+
+/**
+ * ENVIRONMENT BUILDING
+ */
+function buildRoom() {
+    // Materials
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 }); // Dark floor
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 1.0 }); // Gray walls
+    const ceilMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 1.0 });
+
+    // Floor
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Walls
+    const wallGeo = new THREE.PlaneGeometry(20, 5);
+    
+    const wallN = new THREE.Mesh(wallGeo, wallMat);
+    wallN.position.set(0, 2.5, -10);
+    wallN.receiveShadow = true;
+    scene.add(wallN);
+
+    const wallS = new THREE.Mesh(wallGeo, wallMat);
+    wallS.position.set(0, 2.5, 10);
+    wallS.rotation.y = Math.PI;
+    wallS.receiveShadow = true;
+    scene.add(wallS);
+
+    const wallE = new THREE.Mesh(wallGeo, wallMat);
+    wallE.position.set(10, 2.5, 0);
+    wallE.rotation.y = -Math.PI / 2;
+    wallE.receiveShadow = true;
+    scene.add(wallE);
+
+    const wallW = new THREE.Mesh(wallGeo, wallMat);
+    wallW.position.set(-10, 2.5, 0);
+    wallW.rotation.y = Math.PI / 2;
+    wallW.receiveShadow = true;
+    scene.add(wallW);
+
+    // Ceiling
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), ceilMat);
+    ceiling.position.y = 5;
+    ceiling.rotation.x = Math.PI / 2;
+    scene.add(ceiling);
+}
+
+/**
+ * INTERACTIVE OBJECTS GENERATION (Zero External Assets)
+ */
+function createObj(name, geometry, material, position, rotation = [0,0,0], castShadow = true) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...position);
+    mesh.rotation.set(...rotation);
+    mesh.castShadow = castShadow;
+    mesh.receiveShadow = true;
+    mesh.userData = { name: name }; // Link to objData key
+    scene.add(mesh);
+    interactableObjects.push(mesh);
+    return mesh;
+}
+
+function buildInteractiveObjects() {
+    const matWood = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.8 });
+    const matDark = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
+    const matWhite = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
+    const matGlass = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.5 });
+    const matGreen = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.9 });
+    const matCloth = new THREE.MeshStandardMaterial({ color: 0x6b705c, roughness: 1.0 });
+
+    // 1. Kotatsu (Center)
+    createObj('kotatsu', new THREE.BoxGeometry(2, 0.5, 2), matWood, [0, 0.4, 0]);
+    const kotatsuBlanketGeo = new THREE.BoxGeometry(2.2, 0.4, 2.2);
+    const kotatsuBlanket = new THREE.Mesh(kotatsuBlanketGeo, matCloth);
+    kotatsuBlanket.position.set(0, 0.2, 0);
+    scene.add(kotatsuBlanket); // non-interactable decorative part
+
+    // 2. Zabuton (Pillows around kotatsu)
+    createObj('zabuton', new THREE.BoxGeometry(0.8, 0.1, 0.8), matCloth, [0, 0.05, 1.5]);
+    createObj('zabuton', new THREE.BoxGeometry(0.8, 0.1, 0.8), matCloth, [0, 0.05, -1.5]);
+
+    // 3. Terebi (TV)
+    createObj('terebi', new THREE.BoxGeometry(2.5, 1.5, 0.2), matDark, [0, 1.2, -9.8]);
+    // TV Stand
+    const tvStand = new THREE.Mesh(new THREE.BoxGeometry(3, 0.5, 1), matWood);
+    tvStand.position.set(0, 0.25, -9.5);
+    scene.add(tvStand);
+
+    // 4. Sofa
+    createObj('sofa', new THREE.BoxGeometry(3, 0.8, 1), matCloth, [-8, 0.4, 0]);
+    const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 0.3), matCloth);
+    sofaBack.position.set(-8, 1.3, -0.35);
+    scene.add(sofaBack);
+
+    // 5. Hondana (Bookshelf)
+    createObj('hondana', new THREE.BoxGeometry(1.5, 3, 0.8), matWood, [8.5, 1.5, -8]);
+
+    // 6. Mado (Window)
+    createObj('mado', new THREE.PlaneGeometry(4, 2.5), matGlass, [-9.9, 2.5, -4], [0, Math.PI/2, 0], false);
+
+    // 7. Doa (Door)
+    createObj('doa', new THREE.BoxGeometry(1.5, 3.5, 0.1), matWood, [8.5, 1.75, 9.9], [0, Math.PI, 0]);
+
+    // 8. Tokei (Clock)
+    createObj('tokei', new THREE.CylinderGeometry(0.4, 0.4, 0.1, 32), matWhite, [0, 3.5, -9.9], [Math.PI/2, 0, 0]);
+
+    // 9. Shokubutsu (Plant)
+    createObj('shokubutsu', new THREE.CylinderGeometry(0.3, 0.2, 0.5), matWhite, [8.5, 0.25, 8]); // Pot
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), matGreen);
+    leaves.position.set(8.5, 0.8, 8);
+    scene.add(leaves); // attach visually
+
+    // 10. Shashin (Photo Frame)
+    createObj('shashin', new THREE.BoxGeometry(0.8, 0.6, 0.05), matWood, [-9.9, 2.5, 4], [0, Math.PI/2, 0]);
+
+    // 11. Denki (Lamp/Ceiling Light)
+    createObj('denki', new THREE.CylinderGeometry(0.8, 0.8, 0.2, 32), matWhite, [0, 4.9, 0]);
+
+    // 12. Gomibako (Trash can)
+    createObj('gomibako', new THREE.CylinderGeometry(0.3, 0.25, 0.6, 16), matDark, [-8, 0.3, 8]);
+
+    // 13. Ocha (Tea cup)
+    createObj('ocha', new THREE.CylinderGeometry(0.1, 0.1, 0.2, 16), matGreen, [0.3, 0.75, 0.3]);
+
+    // 14. Hon (Book)
+    createObj('hon', new THREE.BoxGeometry(0.4, 0.05, 0.5), new THREE.MeshStandardMaterial({color: 0xaa4444}), [-0.3, 0.67, -0.2]);
+
+    // 15. Eakon (AC)
+    createObj('eakon', new THREE.BoxGeometry(2, 0.5, 0.4), matWhite, [0, 4, -9.8]);
+}
+
+/**
+ * INPUT & CONTROLS SETUP
+ */
+function setupInputListeners() {
+    // Keyboard
+    document.addEventListener('keydown', (e) => onKey(e, true));
+    document.addEventListener('keyup', (e) => onKey(e, false));
+
+    // Mouse Drag (Desktop Look)
+    const canvas = renderer.domElement;
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+    document.addEventListener('mouseup', () => isDragging = false);
+    document.addEventListener('mousemove', onMouseMove);
+
+    // Mobile Joystick
+    joystickBase = document.getElementById('joystick-zone');
+    joystickKnob = document.getElementById('joystick-knob');
+    
+    joystickBase.addEventListener('touchstart', onJoystickStart, {passive: false});
+    joystickBase.addEventListener('touchmove', onJoystickMove, {passive: false});
+    joystickBase.addEventListener('touchend', onJoystickEnd, {passive: false});
+
+    // Mobile Look (Swipe right zone)
+    const lookZone = document.getElementById('look-zone');
+    let touchLookId = null;
+    let lastTouch = {x: 0, y: 0};
+
+    lookZone.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        touchLookId = touch.identifier;
+        lastTouch.x = touch.pageX;
+        lastTouch.y = touch.pageY;
+    }, {passive: false});
+
+    lookZone.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for(let i=0; i<e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if(touch.identifier === touchLookId) {
+                const deltaX = touch.pageX - lastTouch.x;
+                const deltaY = touch.pageY - lastTouch.y;
+                applyLook(deltaX * 0.5, deltaY * 0.5);
+                lastTouch.x = touch.pageX;
+                lastTouch.y = touch.pageY;
+            }
+        }
+    }, {passive: false});
+
+    lookZone.addEventListener('touchend', (e) => {
+        for(let i=0; i<e.changedTouches.length; i++) {
+            if(e.changedTouches[i].identifier === touchLookId) touchLookId = null;
+        }
+    });
+
+    // Window Resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+function onKey(event, isDown) {
+    if (!gameStarted) return; // Kunci gerakan jika game belum mulai
+    switch (event.code) {
+        case 'KeyW': case 'ArrowUp': moveState.forward = isDown; break;
+        case 'KeyS': case 'ArrowDown': moveState.backward = isDown; break;
+        case 'KeyA': case 'ArrowLeft': moveState.left = isDown; break;
+        case 'KeyD': case 'ArrowRight': moveState.right = isDown; break;
+    }
+}
+
+function onMouseMove(event) {
+    if (!gameStarted) return;
+    if(!isDragging) {
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+        return;
+    }
+    const deltaX = event.clientX - previousMousePosition.x;
+    const deltaY = event.clientY - previousMousePosition.y;
+    applyLook(deltaX, deltaY);
+    previousMousePosition = { x: event.clientX, y: event.clientY };
+}
+
+function applyLook(deltaX, deltaY) {
+    const sensitivity = 0.005;
+    
+    // Jangan overwrite euler dari camera.quaternion agar nilai putaran tetap terakumulasi
+    euler.y -= deltaX * sensitivity;
+    euler.x -= deltaY * sensitivity;
+    // Clamp pitch
+    euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+    
+    // Apply yaw to group, pitch to camera
+    cameraGroup.quaternion.setFromEuler(new THREE.Euler(0, euler.y, 0, 'YXZ'));
+    camera.quaternion.setFromEuler(new THREE.Euler(euler.x, 0, 0, 'YXZ'));
+}
+
+// Joystick Logic
+function onJoystickStart(e) {
+    if (!gameStarted) return;
+    e.preventDefault();
+    joystickActive = true;
+    updateJoystick(e.touches[0]);
+}
+function onJoystickMove(e) {
+    e.preventDefault();
+    if(joystickActive) updateJoystick(e.touches[0]);
+}
+function onJoystickEnd(e) {
+    e.preventDefault();
+    joystickActive = false;
+    joystickVector = {x: 0, y: 0};
+    joystickKnob.style.transform = `translate(0px, 0px)`;
+}
+function updateJoystick(touch) {
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    const maxRadius = rect.width / 2 - (rect.width > 100 ? 24 : 16); // Dinamis mengikuti ukuran tombol joystick
+
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    if(distance > maxRadius) {
+        dx = (dx / distance) * maxRadius;
+        dy = (dy / distance) * maxRadius;
+    }
+
+    joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+    
+    // Normalize -1 to 1
+    joystickVector.x = dx / maxRadius;
+    joystickVector.y = dy / maxRadius;
+}
+
+
+/**
+ * MAIN UPDATE LOOP
+ */
+function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+
+    if (gameStarted) {
+        // 1. Handle Movement
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+
+        direction.z = Number(moveState.forward) - Number(moveState.backward) - joystickVector.y;
+        direction.x = Number(moveState.right) - Number(moveState.left) + joystickVector.x;
+        direction.normalize();
+
+        if (moveState.forward || moveState.backward || joystickVector.y !== 0) velocity.z -= direction.z * movementSpeed * delta;
+        if (moveState.left || moveState.right || joystickVector.x !== 0) velocity.x += direction.x * movementSpeed * delta; 
+
+        isMoving = Math.abs(velocity.x) > 0.1 || Math.abs(velocity.z) > 0.1;
+
+        cameraGroup.translateX(velocity.x * delta * 10);
+        cameraGroup.translateZ(velocity.z * delta * 10);
+
+        // Collision Box (Simple Room Boundaries)
+        if(cameraGroup.position.x > 9) cameraGroup.position.x = 9;
+        if(cameraGroup.position.x < -9) cameraGroup.position.x = -9;
+        if(cameraGroup.position.z > 9) cameraGroup.position.z = 9;
+        if(cameraGroup.position.z < -9) cameraGroup.position.z = -9;
+
+        // 3. Raycaster (Interactions)
+        raycaster.setFromCamera(mouseCenter, camera);
+        const intersects = raycaster.intersectObjects(interactableObjects);
+
+        const uiPrompt = document.getElementById('interaction-prompt');
+        const promptName = document.getElementById('prompt-name');
+        const btnInteract = document.getElementById('btn-interact');
+
+        if (intersects.length > 0 && intersects[0].distance <= 4.0) {
+            const objKey = intersects[0].object.userData.name;
+            if(currentLookObj !== objKey) {
+                currentLookObj = objKey;
+                const data = objData[objKey];
+                
+                promptName.innerText = `${data.kanji} (${data.arti})`;
+                btnInteract.innerText = 'Cek';
+                uiPrompt.style.opacity = '1';
+            }
+        } else {
+            if(currentLookObj !== null) {
+                currentLookObj = null;
+                uiPrompt.style.opacity = '0';
+            }
+        }
+    } else {
+        // Efek rotasi sinematik kamera yang sangat lambat sebagai latar belakang saat berada di menu utama
+        cameraGroup.rotation.y += 0.05 * delta;
+    }
+
+    renderer.render(scene, camera);
+}
+
+
+/**
+ * UI & MODAL MANAGEMENT
+ */
+function setupUIListeners() {
+    const btnInteract = document.getElementById('btn-interact');
+    const modalContainer = document.getElementById('modal-container');
+
+    // Prevent touch events from leaking through modal to canvas
+    modalContainer.addEventListener('touchstart', (e) => e.stopPropagation());
+    modalContainer.addEventListener('touchmove', (e) => e.stopPropagation());
+    modalContainer.addEventListener('mousedown', (e) => e.stopPropagation());
+    modalContainer.addEventListener('wheel', (e) => e.stopPropagation());
+
+    btnInteract.addEventListener('click', () => {
+        if(currentLookObj) {
+            // Unlock objek ke dalam kamus
+            if(!unlockedObjects.has(currentLookObj)) {
+                unlockedObjects.add(currentLookObj);
+                document.getElementById('kamus-counter').innerText = `${unlockedObjects.size}/${totalObjects}`;
+            }
+            openDictionaryModal(currentLookObj);
+        }
+    });
+
+    // Close modal if clicking outside panel
+    modalContainer.addEventListener('click', (e) => {
+        if(e.target === modalContainer) closeModal();
+    });
+}
+
+function closeModal() {
+    const modalContainer = document.getElementById('modal-container');
+    modalContainer.style.opacity = '0';
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel(); // Menghentikan suara jika modal ditutup
+    setTimeout(() => {
+        modalContainer.classList.add('hidden');
+        modalContainer.innerHTML = '';
+    }, 300);
+}
+
+// Fungsi Bantuan untuk Toggle Romaji dan Arti
+window.toggleVisibility = function(id) {
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden');
+};
+
+window.toggleGroup = function(className) {
+    const els = document.querySelectorAll('.' + className);
+    els.forEach(el => el.classList.toggle('hidden'));
+};
+
+// Kamus Global Modal (Monochrome & Logic Unlock)
+window.openGlobalDictionary = function() {
+    const modalContainer = document.getElementById('modal-container');
+    
+    let listHtml = '';
+    let foundCount = 0;
+    
+    for (const [key, data] of Object.entries(objData)) {
+        if (unlockedObjects.has(key)) {
+            foundCount++;
+            listHtml += `
+                <div class="bg-white/5 p-1.5 md:p-3 rounded-lg border border-white/10 flex justify-between items-center hover:bg-white/10 transition-all cursor-pointer" onclick="openDictionaryModal('${key}')">
+                    <div>
+                        <h3 class="text-sm md:text-lg font-bold">${data.kanji}</h3>
+                        <p class="text-[8px] md:text-xs text-gray-400">${data.arti}</p>
+                    </div>
+                    <span class="text-[8px] md:text-xs bg-white text-black font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded">Lihat</span>
+                </div>
+            `;
+        }
+    }
+
+    // Tampilan jika kamus masih kosong
+    if (foundCount === 0) {
+        listHtml = `<div class="text-center py-6 md:py-10 text-gray-500 text-[10px] md:text-base italic">Belum ada kosakata yang ditemukan.<br>Cek objek di dalam ruangan.</div>`;
+    }
+
+    const html = `
+        <div class="glass-panel w-[95vw] md:w-[600px] rounded-xl md:rounded-2xl p-2 md:p-6 relative flex flex-col transform scale-95 transition-transform duration-300 max-h-[95vh] md:max-h-[85vh]" id="modal-content">
+            <button onclick="closeModal()" class="absolute top-1.5 right-2 md:top-4 md:right-4 text-white/50 hover:text-white text-xl md:text-3xl leading-none z-10">&times;</button>
+            
+            <div class="text-center mb-1.5 md:mb-5 border-b border-white/10 pb-1.5 md:pb-4">
+                <h2 class="text-sm md:text-2xl font-bold flex items-center justify-center gap-1.5 md:gap-2">📖 Kamus (辞書) Ruang Tamu</h2>
+                <p class="text-[9px] md:text-sm text-gray-400 mt-0.5 md:mt-1">Ditemukan: <span class="text-white font-bold">${foundCount} / ${totalObjects}</span></p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll pr-1.5 md:pr-2 space-y-1 md:space-y-3">
+                ${listHtml}
+            </div>
+        </div>
+    `;
+    
+    modalContainer.innerHTML = html;
+    modalContainer.classList.remove('hidden');
+    void modalContainer.offsetWidth;
+    modalContainer.style.opacity = '1';
+    setTimeout(() => {
+        document.getElementById('modal-content').classList.remove('scale-95');
+    }, 10);
+};
+
+// Fungsi Inti TTS (Zero Delay)
+let currentUtterance = null;
+window.speakText = function(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Zero delay: hentikan suara sebelumnya instan
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        currentUtterance.lang = 'ja-JP'; 
+        currentUtterance.rate = 0.85; // Kecepatan khusus agar mudah didengar
+        
+        const voices = window.speechSynthesis.getVoices();
+        // Utamakan suara Jepang lokal (tanpa delay unduhan jaringan)
+        const localJaVoice = voices.find(v => v.lang.includes('ja') && v.localService) || voices.find(v => v.lang.includes('ja'));
+        if (localJaVoice) currentUtterance.voice = localJaVoice;
+        
+        window.speechSynthesis.speak(currentUtterance);
+    } else {
+        console.warn("TTS tidak didukung pada browser ini.");
+    }
+};
+
+// Prapemuatan list suara TTS untuk browser berbasis Chromium
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+// Komponen Ikon Audio SVG (Lebih bersih dan profesional dibanding Emoji)
+const getAudioIcon = (customClass) => `
+    <svg xmlns="http://www.w3.org/2000/svg" class="${customClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+    </svg>
+`;
+
+function openDictionaryModal(key) {
+    const data = objData[key];
+    const modalContainer = document.getElementById('modal-container');
+    
+    // Tampilan dioptimalkan: Monochrome Vibes, Strong Glassmorphism
+    const html = `
+        <div class="glass-panel w-[96vw] md:w-[550px] rounded-xl md:rounded-2xl p-1.5 md:p-6 relative flex flex-row md:flex-col gap-1.5 md:gap-5 transform scale-95 transition-transform duration-300 max-h-[96vh] md:max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl" id="modal-content">
+            
+            <button onclick="closeModal()" class="absolute top-1 right-1.5 md:top-3 md:right-3 text-white/50 hover:text-white text-lg md:text-3xl leading-none z-10">&times;</button>
+            
+            <!-- Wrapper Flex untuk Kolom Kiri & Kanan -->
+            <div class="flex flex-row md:flex-col gap-1.5 md:gap-5">
+                
+                <!-- Info Utama (Kiri di Mobile, Atas di Desktop) -->
+                <div class="w-[30%] md:w-full flex flex-col justify-center items-center text-center border-r md:border-r-0 md:border-b border-white/10 pr-1.5 md:pr-0 md:pb-4 shrink-0">
+                    <p class="text-[8px] md:text-sm text-gray-400 mb-0.5">${data.furigana} • ${data.romaji}</p>
+                    <h2 class="text-lg md:text-4xl font-bold mb-0.5 md:mb-1.5 flex items-center justify-center gap-1.5 md:gap-2 text-white">
+                        ${data.kanji}
+                        <button onclick="speakText('${data.kanji}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white" title="Dengarkan pengucapan">
+                            ${getAudioIcon('w-4 h-4 md:w-7 md:h-7')}
+                        </button>
+                    </h2>
+                    <p class="text-[9px] md:text-base text-gray-300 font-medium md:mb-2">${data.arti}</p>
+                </div>
+
+                <!-- Konteks Percakapan (Kanan di Mobile, Bawah di Desktop) -->
+                <div class="w-[70%] md:w-full flex flex-col gap-1 md:gap-4 justify-center">
+                    
+                    <!-- Contoh Kalimat -->
+                    <div class="bg-white/5 p-1.5 md:p-4 rounded-lg border border-white/10">
+                        <div class="flex justify-between items-start md:items-center mb-1 md:mb-2 flex-col md:flex-row gap-1 md:gap-0">
+                            <h3 class="text-[8px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Kalimat</h3>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="toggleVisibility('kalimat-kana')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
+                                <button onclick="toggleVisibility('kalimat-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
+                                <button onclick="toggleVisibility('kalimat-arti')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-1.5 md:gap-2">
+                            <p class="text-[10px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.contoh.jp}</p>
+                            <button onclick="speakText('${data.contoh.jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
+                                ${getAudioIcon('w-3 h-3 md:w-5 md:h-5')}
+                            </button>
+                        </div>
+                        
+                        <div id="kalimat-kana" class="hidden mt-1 md:mt-2 pt-1 md:pt-1.5 border-t border-white/10">
+                            <p class="text-[9px] md:text-sm text-gray-300 font-medium">${data.contoh.kana}</p>
+                        </div>
+                        <div id="kalimat-romaji" class="hidden mt-1 md:mt-1.5 pt-1 md:pt-1.5 border-t border-white/10">
+                            <p class="text-[8px] md:text-sm text-gray-400 italic">${data.contoh.romaji}</p>
+                        </div>
+                        <div id="kalimat-arti" class="hidden mt-1 md:mt-1.5 pt-1 md:pt-1.5 border-t border-white/10">
+                            <p class="text-[8px] md:text-sm text-gray-200 font-medium">${data.contoh.id}</p>
+                        </div>
+                    </div>
+
+                    <!-- Kaiwa -->
+                    <div class="bg-white/5 p-1.5 md:p-4 rounded-lg border border-white/10">
+                        <div class="flex justify-between items-start md:items-center mb-1 md:mb-3 flex-col md:flex-row gap-1 md:gap-0">
+                            <h3 class="text-[8px] md:text-xs text-white uppercase tracking-wider font-bold">Contoh Percakapan</h3>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="toggleGroup('kaiwa-kana')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">あ Kana <span>▼</span></button>
+                                <button onclick="toggleGroup('kaiwa-romaji')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">A Romaji <span>▼</span></button>
+                                <button onclick="toggleGroup('kaiwa-arti')" class="flex items-center gap-0.5 md:gap-1 text-[7px] md:text-xs bg-white/5 hover:bg-white/20 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-white/20 transition-all text-gray-300">🇮🇩 Arti <span>▼</span></button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1 md:gap-4">
+                            <div class="flex gap-1.5 md:gap-2.5">
+                                <div class="w-3 h-3 md:w-6 md:h-6 rounded-full bg-white flex items-center justify-center text-[7px] md:text-xs shrink-0 mt-0.5 font-bold text-black">A</div>
+                                <div class="flex-1">
+                                    <div class="flex items-start gap-1.5 md:gap-2">
+                                        <p class="text-[10px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.kaiwa.a_jp}</p>
+                                        <button onclick="speakText('${data.kaiwa.a_jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
+                                            ${getAudioIcon('w-3 h-3 md:w-5 md:h-5')}
+                                        </button>
+                                    </div>
+                                    <div class="kaiwa-kana hidden mt-1 md:mt-1.5">
+                                        <p class="text-[9px] md:text-sm text-gray-300 font-medium">${data.kaiwa.a_kana}</p>
+                                    </div>
+                                    <div class="kaiwa-romaji hidden mt-1 md:mt-1.5">
+                                        <p class="text-[8px] md:text-sm text-gray-400 italic">${data.kaiwa.a_romaji}</p>
+                                    </div>
+                                    <div class="kaiwa-arti hidden mt-1 md:mt-1.5">
+                                        <p class="text-[8px] md:text-sm text-gray-200 font-medium">${data.kaiwa.a_id}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-1.5 md:gap-2.5">
+                                <div class="w-3 h-3 md:w-6 md:h-6 rounded-full bg-white/20 border border-white/50 flex items-center justify-center text-[7px] md:text-xs shrink-0 mt-0.5 font-bold text-white">B</div>
+                                <div class="flex-1">
+                                    <div class="flex items-start gap-1.5 md:gap-2">
+                                        <p class="text-[10px] md:text-[16px] font-medium leading-tight md:leading-relaxed text-gray-100">${data.kaiwa.b_jp}</p>
+                                        <button onclick="speakText('${data.kaiwa.b_jp}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
+                                            ${getAudioIcon('w-3 h-3 md:w-5 md:h-5')}
+                                        </button>
+                                    </div>
+                                    <div class="kaiwa-kana hidden mt-1 md:mt-1.5">
+                                        <p class="text-[9px] md:text-sm text-gray-300 font-medium">${data.kaiwa.b_kana}</p>
+                                    </div>
+                                    <div class="kaiwa-romaji hidden mt-1 md:mt-1.5">
+                                        <p class="text-[8px] md:text-sm text-gray-400 italic">${data.kaiwa.b_romaji}</p>
+                                    </div>
+                                    <div class="kaiwa-arti hidden mt-1 md:mt-1.5">
+                                        <p class="text-[8px] md:text-sm text-gray-200 font-medium">${data.kaiwa.b_id}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tombol Kuis Paling Bawah -->
+            <div class="w-full mt-1.5 md:mt-4">
+                <button onclick="openQuizModal('${key}', 0)" class="w-full bg-white hover:bg-gray-200 text-black py-1.5 md:py-3.5 rounded-lg text-[10px] md:text-base font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-wide">
+                    MULAI KUIS
+                </button>
+            </div>
+            
+        </div>
+    `;
+
+    modalContainer.innerHTML = html;
+    modalContainer.classList.remove('hidden');
+    // Trigger reflow
+    void modalContainer.offsetWidth;
+    modalContainer.style.opacity = '1';
+    setTimeout(() => {
+        document.getElementById('modal-content').classList.remove('scale-95');
+        // Auto-play TTS untuk Kotoba utama saat panel terbuka (Responsif)
+        speakText(data.kanji);
+    }, 10);
+}
+
+function openQuizModal(key, quizIndex) {
+    const data = objData[key];
+    const quiz = data.kuis[quizIndex];
+    const modalContainer = document.getElementById('modal-container');
+    
+    // Hilangkan simbol rumpang '___' sebelum dikirim ke mesin TTS
+    const textToSpeak = quiz.soal.replace(/___/g, '').replace(/'/g, "\\'");
+
+    let optionsHtml = '';
+    quiz.opsi.forEach((opt, idx) => {
+        optionsHtml += `
+            <button onclick="checkAnswer('${key}', ${quizIndex}, ${idx}, ${quiz.jawaban})" id="opt-${idx}" class="w-full text-left bg-white/5 hover:bg-white/20 border border-white/20 px-2 py-1 md:px-5 md:py-3.5 rounded-lg transition-all font-medium text-[9px] md:text-base text-gray-200">
+                ${['A', 'B', 'C', 'D'][idx]}. ${opt}
+            </button>
+        `;
+    });
+
+    const isLast = quizIndex === data.kuis.length - 1;
+
+    // Font kuis diperbesar dan efek Monochrome Vibes
+    const html = `
+        <div class="glass-panel w-[90vw] md:w-[500px] rounded-xl md:rounded-2xl p-2.5 md:p-6 relative flex flex-row md:flex-col gap-2.5 md:gap-6 overflow-hidden shadow-2xl" id="modal-content">
+            <button onclick="closeModal()" class="absolute top-1.5 right-2 md:top-4 md:right-4 text-white/50 hover:text-white text-lg md:text-2xl leading-none z-10">&times;</button>
+            
+            <!-- Pertanyaan Kuis (Kiri / Atas) -->
+            <div class="w-[45%] md:w-full flex flex-col justify-center border-r md:border-r-0 md:border-b border-white/10 pr-2.5 md:pr-0 md:pb-4 shrink-0">
+                <span class="text-[8px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 bg-white/20 rounded text-white self-start">Kuis ${quizIndex + 1}/3</span>
+                <p class="text-[8px] md:text-sm text-gray-400 mt-1.5 md:mt-3 uppercase tracking-wider font-semibold">${quiz.instruksi}</p>
+                <h3 class="text-[11px] md:text-2xl font-bold mt-1 md:mt-2 leading-snug flex items-start gap-1.5 md:gap-2 text-white">
+                    ${quiz.soal}
+                    <button onclick="speakText('${textToSpeak}')" class="opacity-70 hover:opacity-100 hover:scale-110 transition-all focus:outline-none text-white shrink-0" title="Dengarkan">
+                        ${getAudioIcon('w-3 h-3 md:w-6 md:h-6')}
+                    </button>
+                </h3>
+            </div>
+
+            <!-- Opsi Kuis (Kanan / Bawah) -->
+            <div class="w-[55%] md:w-full flex flex-col justify-center gap-1.5 md:gap-4">
+                <div class="flex flex-col gap-1 md:gap-3" id="quiz-options">
+                    ${optionsHtml}
+                </div>
+
+                <div id="quiz-feedback" class="hidden rounded-lg p-1.5 md:p-3 text-center font-bold text-[9px] md:text-sm"></div>
+
+                <div class="justify-between items-center mt-auto border-t border-white/10 pt-1.5 md:pt-4 hidden" id="quiz-actions">
+                    <button onclick="openDictionaryModal('${key}')" class="text-[8px] md:text-sm text-gray-400 hover:text-white transition-all">Ke Kamus</button>
+                    ${!isLast ? 
+                        `<button onclick="openQuizModal('${key}', ${quizIndex + 1})" class="bg-white hover:bg-gray-200 text-black px-2 py-1 md:px-5 md:py-2 rounded-lg text-[9px] md:text-sm font-bold shadow-md transition-all">Selanjutnya</button>` :
+                        `<button onclick="closeModal()" class="bg-white hover:bg-gray-200 text-black px-2 py-1 md:px-5 md:py-2 rounded-lg text-[9px] md:text-sm font-bold shadow-md transition-all">Selesai</button>`
+                    }
+                </div>
+            </div>
+        </div>
+    `;
+
+    modalContainer.innerHTML = html;
+}
+
+// Attach checkAnswer to window scope so inline onclick works
+window.checkAnswer = function(key, quizIndex, selectedIdx, correctIdx) {
+    const optionsContainer = document.getElementById('quiz-options');
+    const buttons = optionsContainer.querySelectorAll('button');
+    const feedback = document.getElementById('quiz-feedback');
+    const actions = document.getElementById('quiz-actions');
+
+    // Disable all buttons
+    buttons.forEach(btn => btn.disabled = true);
+
+    if (selectedIdx === correctIdx) {
+        document.getElementById(`opt-${selectedIdx}`).classList.replace('bg-white/5', 'bg-white');
+        document.getElementById(`opt-${selectedIdx}`).classList.replace('text-gray-200', 'text-black');
+        document.getElementById(`opt-${selectedIdx}`).classList.add('border-white');
+        feedback.textContent = 'Benar! (正解)';
+        feedback.className = 'rounded-xl p-3 mb-4 text-center font-bold bg-white text-black border border-white block';
+    } else {
+        document.getElementById(`opt-${selectedIdx}`).classList.replace('bg-white/5', 'bg-white/10');
+        document.getElementById(`opt-${correctIdx}`).classList.replace('bg-white/5', 'bg-white');
+        document.getElementById(`opt-${correctIdx}`).classList.replace('text-gray-200', 'text-black');
+        feedback.textContent = 'Salah (不正解)';
+        feedback.className = 'rounded-xl p-3 mb-4 text-center font-bold bg-black/50 text-gray-400 border border-gray-600 block';
+    }
+
+    actions.classList.remove('hidden');
+    actions.classList.add('flex');
+};
+
+// Start Everything
+init();
+
+</script>
+</body>
+</html>
